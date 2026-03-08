@@ -4,33 +4,67 @@ A sleek, modular ClickGUI menu mod for Minecraft 1.8.9 Forge, optimized for Hypi
 
 ## Features
 
-### Player Mode Modules
-- **Fly** - Creative-mode flight with packet optimization, NoFall, and anti-kick
-- **Clip** - Teleport in any direction via `.clip <direction> <distance>` command
-- **Sand NoClip** - Phase through falling blocks (sand/gravel) when suffocating
-- **Scaffold** - Auto-place blocks under feet for bridging
-- **Speed** - Multiple speed modes (Strafe, OnGround, Boost)
-- **NoFall** - Prevent fall damage with various bypass methods
-- **Autoclicker** - Vape V4-style humanized clicking with jitter and fatigue simulation
-- **Storage ESP** - Highlight chests, ender chests, hoppers with customizable colors
-- **Player Hider** - Hide other players to reduce lag (with whitelist)
-- **Plot ESP** - Visualize housing plot boundaries
-- **Anti-AFK** - Prevent AFK kicks with subtle movements
-- **Visitor Logger** - Log player joins/leaves with timestamps
-- **Chat Macros** - Quick-send preset chat messages with hotkeys
-- **Waypoints** - Save and teleport to locations per housing plot
-- **Creative Tab** - Infinite storage tab with NBT persistence
+### Visual
+- **ActiveEffects** - Display active potion effects on HUD
+- **Biome** - Shows the current biome
+- **CPS** - Shows your clicks per second
+- **Chams** - See entities through walls
+- **Clock** - Shows the current time
+- **Coords** - Shows your XYZ coordinates
+- **Direction** - Compass HUD with teammate tracking
+- **ESP** - See entities through walls
+- **FPS** - Shows your frames per second
+- **FreeCam** - True detached camera (anticheat safe)
+- **Fullbright** - Maximum brightness everywhere
+- **Hide Entities** - Hides lag-causing entities
+- **Loaded Players** - Shows players within simulation distance
+- **Nametags** - Enhanced player nametags
+- **Ping** - Shows your ping to the server
+- **Scoreboard** - Custom moveable scoreboard with cleaner look
+- **Search** - Highlight blocks in the world
+- **StorageESP** - Highlight storage blocks
+- **TPS** - Shows server TPS
+- **Tracers** - Draw lines to entities
+- **TrueSight** - See barriers and invisible players
+- **Weather** - Customize rendered weather
 
-### Owner Mode Modules
-- **Fast Place** - Rapid block placement (10+ blocks/sec)
-- **Fast Break** - Accelerated block breaking
-- **Auto-Fill** - Fill selections with blocks (Fill/Wall/Floor/Hollow modes)
-- **Mirror Build** - Symmetrical block placement across X/Y/Z axes
-- **NPC Preview** - Preview NPC/Hologram/Actionpad placement
-- **NBT Editor** - View and edit item NBT data
-- **Unbreakable** - Make items unbreakable
-- **Lore Editor** - Edit item descriptions with color code support
-- **Rename** - Rename items with color code formatting
+### Moderation
+- **Crash Detector** - Alerts when players hold crash items
+- **Griefer Detector** - Alerts when a player flags griefer checks
+
+### Exploit
+- **Bypass Blacklist** - Avoids blacklist checks with 1-tick actions
+- **Dispenser Fill** - Automatically fills dispenser with selected item
+- **Ghost Disc** - Instantly inserts and ejects a music disc from a jukebox
+- **Image to NBT** - Give items with custom NBT data
+- **Item Stealer** - Copy items from players, armor stands, and item frames (keybind only)
+- **NBT Logger** - Log items with ItemModel NBT from other players
+- **Packet Multiplier** - Sends GUI click packets multiple times
+- **Server Matcher** - Match housing server IDs
+
+### QOL (Quality of Life)
+- **Anti Void Lag** - Prevents lag when void holes are filled/broken
+- **Hide Hykia Entities** - Hides entities in Hykia lobby region
+- **Sprint** - Always sprint without holding the key
+- **Zoom** - Zoom in view (Hold Key)
+
+### Miscellaneous
+- **Blink** - Completely freezes all packets until disabled
+- **Creative Flight** - Creative-mode flight with double-tap space
+- **FastBreak** - Break blocks faster
+- **FastPlace** - Universal fast right-click
+- **Ghost Blocks** - Creates ghost blocks
+- **Left Autoclicker** - Advanced humanized autoclicker
+- **NoDebuff** - Cancel negative potion effects
+- **Nuker** - Breaks blocks around you
+- **Reach** - Modify attack and interaction reach
+- **Speed** - Move faster
+
+### Client
+- **Chat** - Increases chat history and input limit
+- **Fancy Text** - Replaces typed text with fancy Unicode characters
+- **Friends** - Middle click players to add as friends
+- **Module List** - Display enabled modules on screen
 
 ## Installation
 
