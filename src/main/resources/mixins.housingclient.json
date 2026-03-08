@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "minVersion": "0.7.11",
+  "package": "com.housingclient.mixin",
+  "refmap": "mixins.housingclient.refmap.json",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinWorld",
+    "MixinGuiIngame",
+    "MixinEntityRenderer",
+    "MixinGuiChat",
+    "MixinGuiPlayerTabOverlay",
+    "MixinNetworkManager",
+    "MixinGuiMultiplayer",
+    "MixinNetHandlerPlayClient",
+    "MixinPlayerControllerMP",
+    "MixinFMLHandshakeMessage",
+    "MixinSkinManager",
+    "MixinRenderManager",
+    "MixinGuiEditSign",
+    "MixinGuiScreen",
+    "MixinEntityPlayerSP"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

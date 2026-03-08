@@ -1,0 +1,14 @@
+@everyone
+# 🔧 HousingClient v1.0.1 - Bug Fixes & Improvements
+
+Several bugs have been squashed:
+
+- **NBT Editor:** Fixed item parsing, now uses packets instead of /give (no OP needed)
+- **Player Crasher:** Fixed spam glitch, updated NBT payload
+- **Nuker:** Now properly disables on kick/disconnect
+- **Chat Module:** Removed broken right-click copy (will return later)
+- **Settings GUI:** Back arrow now properly centered
+
+The client now has **46 modules** with more coming soon.
+
+**Don't have access yet?** Make a ticket in #general-ticket to request the **Download Access** role.

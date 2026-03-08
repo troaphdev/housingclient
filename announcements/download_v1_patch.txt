@@ -1,0 +1,16 @@
+# 🔧 HousingClient v1.0.1 - Patch Update
+
+**What's Fixed:**
+- NBT Editor: Item parsing now handles spaces & metadata correctly
+- NBT Editor: Give button uses packets (works without OP)
+- NBT Editor: Added Save button to store items in custom creative tab
+- Player Crasher: Fixed spam glitch when rapidly toggling
+- Nuker: Properly disables when kicked or disconnected
+- Settings: Back arrow centered properly
+
+**Removed (temporarily):**
+- Chat Copy: Right-click to copy chat was buggy, will return later
+
+**Download:** Re-download from the attachment below. Same license key works.
+
+Issues? Report in #report-issues.

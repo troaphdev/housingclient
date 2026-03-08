@@ -1,0 +1,32 @@
+# Build output
+build/
+bin/
+out/
+
+# Gradle
+.gradle/
+gradle-2.14/
+gradle.zip
+
+# IDE
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+.vscode/
+
+# Minecraft runtime
+run/
+
+# Compiled files
+*.class
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/

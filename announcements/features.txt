@@ -1,0 +1,81 @@
+# HousingClient v1.0.0 - Features
+
+## Building (8 modules)
+- **AutoFill** - Automatically fills in blocks
+- **FastBreak** - Break blocks faster
+- **FastDispenser** - Quick dispenser item placement
+- **FastPlace** - Place blocks faster
+- **GhostBlocks** - See through blocks
+- **MirrorBuild** - Mirror your builds
+- **NPCPreview** - Preview NPC placement
+- **Nuker** - Mass block breaking
+
+## Client (7 modules)
+- **ClickGUI** - Main settings interface (Right Shift)
+- **CrasherDetector** - Detect crash attempts
+- **Friends** - Friend list management
+- **HUD** - Heads-up display
+- **HudDesigner** - Customize HUD layout
+- **InfiniteChat** - Bypass chat limits
+- **ItemStealer** - Copy items from chests
+- **ModuleList** - On-screen module list
+- **NBTGiver** - Give items with NBT
+
+## Combat (3 modules)
+- **Autoclicker** - Automatic clicking
+- **NoDebuff** - Remove debuff effects
+- **Reach** - Extended reach distance
+
+## Exploit (5 modules)
+- **Blink** - Freeze position packets
+- **InvisPot** - Invisible potion effect
+- **PlayerCrasher** - Crash other players
+- **ServerMatcher** - Match server settings
+- **UniqueCrashItem** - Special crash items
+
+## Movement (6 modules)
+- **Clip** - Clip through blocks
+- **Fly** - Flight mode
+- **SandNoClip** - No-clip through sand/gravel
+- **Scaffold** - Auto-bridge building
+- **Speed** - Move faster
+- **Sprint** - Auto sprint
+
+## Items (5 modules)
+- **CrashEggDispenser** - Crash egg creation
+- **LoreEditor** - Edit item lore
+- **NBTEditor** - Full NBT editing
+- **Rename** - Rename items
+- **Unbreakable** - Make items unbreakable
+
+## Visuals (23 modules)
+- **AntiBot** - Hide bots
+- **Biome** - Show current biome
+- **Clock** - In-game clock
+- **Coords** - Coordinate display
+- **CPS** - Clicks per second
+- **Direction** - Compass direction
+- **EntityOptimizer** - Optimize entity rendering
+- **ESP** - Entity highlighting
+- **FPS** - Frames per second
+- **FreeCam** - Free camera movement
+- **Fullbright** - Full brightness
+- **HideEntities** - Hide specific entities
+- **LoadedPlayers** - Show loaded players
+- **Nametags** - Enhanced nametags
+- **Ping** - Network latency display
+- **PlayerHider** - Hide players
+- **PlotESP** - Plot boundary ESP
+- **Search** - Highlight specific blocks
+- **StorageESP** - Highlight storage containers
+- **TPS** - Server ticks per second
+- **Tracers** - Lines to entities
+- **TrueSight** - See invisible entities
+- **Weather** - Weather control
+
+## Other (2 modules)
+- **HideHykiaEntities** - Hide Hykia entities
+- **NBTLogger** - Log NBT data
+
+---
+**Total: 60+ modules**

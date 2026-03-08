@@ -1,0 +1,7 @@
+# HousingClient v1.0.0
+
+**Requirements:** Minecraft 1.8.9 + Forge
+
+**Install:** Drop in `.minecraft/mods` and launch. Enter your license key when prompted.
+
+Issues? Report in #report-issues.

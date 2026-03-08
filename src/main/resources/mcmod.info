@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "housingclient",
+    "name": "HousingClient Pro",
+    "description": "A comprehensive client mod for Hypixel Housing with modular features and sleek GUI.",
+    "version": "1.0.4",
+    "mcversion": "1.8.9",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["HousingClient Team"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

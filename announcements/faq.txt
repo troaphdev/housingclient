@@ -1,0 +1,25 @@
+# Frequently Asked Questions
+
+**Q: How do I get a license key?**
+A: Make a ticket in #general-ticket to request one.
+
+**Q: What Minecraft version does this work on?**
+A: Minecraft 1.8.9 with Forge.
+
+**Q: How do I install it?**
+A: Drop the JAR file in your `.minecraft/mods` folder and launch with Forge. Enter your license key when prompted.
+
+**Q: Can I share my license key?**
+A: No. License keys are bound to your hardware (HWID) on first use. Sharing will not work and may result in a ban.
+
+**Q: My license says "HWID Mismatch" - what do I do?**
+A: Your license is already bound to another computer. Make a ticket if you need a reset.
+
+**Q: The client crashed / something is broken**
+A: Report it in #report-issues with details about what happened.
+
+**Q: How do I open the GUI?**
+A: Press RIGHT SHIFT by default.
+
+**Q: How do I use commands?**
+A: Type `.help` in chat to see available commands. Commands start with a period.

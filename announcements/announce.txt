@@ -1,0 +1,12 @@
+@everyone
+# HousingClient v1.0.0 - Now Available
+
+The wait is over. HousingClient has officially released.
+
+**44 modules** including FreeCam, ESP, NBT Editor, Item Stealer, and more.
+
+**How to get it:**
+- Make a ticket in #general-ticket to request the **Download Access** role
+- Once you have it, make another ticket to request a license key
+
+See #downloads if you have access.
