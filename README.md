@@ -1,5 +1,5 @@
 # HousingClient
-A useful mod menu for Hypixel Housing with various functions.
+A useful mod menu for Hypixel Housing with various functions.<br>
 https://discord.gg/Zu43A6UUju
 
 
