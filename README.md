@@ -123,7 +123,7 @@ Using this mod on Hypixel or other servers that prohibit blacklisted modificatio
 - Inspired by community requests from Hypixel Housing players
 - Made with love by Troaph
 
-## License
+## Disclaimer
 
 This project is for educational purposes only.
 
