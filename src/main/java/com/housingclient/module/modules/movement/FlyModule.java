@@ -6,11 +6,15 @@ import com.housingclient.module.Module;
 import com.housingclient.module.ModuleMode;
 import com.housingclient.module.modules.client.ClickGUIModule;
 import com.housingclient.module.settings.BooleanSetting;
+import com.housingclient.module.settings.ModeSetting;
 import com.housingclient.module.settings.NumberSetting;
 
 public class FlyModule extends Module {
 
-    private final NumberSetting speed = new NumberSetting("Speed", "Fly speed multiplier", 1.0, 0.1, 20.0, 0.1);
+    private final ModeSetting flightMode = new ModeSetting("Mode", "How flight movement speed is applied", "Vanilla",
+            "Vanilla", "Constant");
+    private final NumberSetting speed = new NumberSetting("Speed", "Fly multiplier or constant blocks per tick", 1.0,
+            0.1, 20.0, 0.1);
     private final NumberSetting sprintSpeed = new NumberSetting("Sprint Speed", "Speed when sprinting", 2.0, 0.5, 50.0,
             0.1);
     private final BooleanSetting doubleTap = new BooleanSetting("Double Tap", "Double tap space to toggle fly", true);
@@ -31,6 +35,7 @@ public class FlyModule extends Module {
     public FlyModule() {
         super("Creative Flight", "Creative-mode flight with double-tap space", Category.MISCELLANEOUS, ModuleMode.BOTH);
 
+        addSetting(flightMode);
         addSetting(speed);
         addSetting(sprintSpeed);
         addSetting(doubleTap);
@@ -77,8 +82,13 @@ public class FlyModule extends Module {
                     mc.thePlayer.capabilities.isFlying = true;
 
                     // Apply fly speed immediately (don't wait for first tick)
-                    float flySpeed = (float) (speed.getValue() * 0.05f);
-                    mc.thePlayer.capabilities.setFlySpeed(flySpeed);
+                    if (isBlatantModeEnabled() && flightMode.is("Constant")) {
+                        mc.thePlayer.capabilities.setFlySpeed(0.0f);
+                        applyConstantVelocity();
+                    } else {
+                        float flySpeed = (float) (speed.getValue() * 0.05f);
+                        mc.thePlayer.capabilities.setFlySpeed(flySpeed);
+                    }
 
                     // Give a tiny upward boost to lift off ground immediately
                     if (mc.thePlayer.onGround) {
@@ -97,6 +107,12 @@ public class FlyModule extends Module {
         if (mc.thePlayer != null) {
             // Restore the original fly speed
             mc.thePlayer.capabilities.setFlySpeed(originalFlySpeed);
+
+            if (isBlatantModeEnabled() && flightMode.is("Constant")) {
+                mc.thePlayer.motionX = 0;
+                mc.thePlayer.motionY = 0;
+                mc.thePlayer.motionZ = 0;
+            }
 
             // Safe Mode: Respect server-granted permissions
             if (!isBlatantModeEnabled()) {
@@ -145,6 +161,7 @@ public class FlyModule extends Module {
     private void updateSettingsVisibility() {
         if (!isBlatantModeEnabled()) {
             // Safe Mode: Hide risky settings
+            flightMode.setVisible(false);
             speed.setVisible(true);
             sprintSpeed.setVisible(true);
             doubleTap.setVisible(false);
@@ -153,10 +170,11 @@ public class FlyModule extends Module {
             limitHeight.setVisible(false);
         } else {
             // Blatant Mode: Show all
+            flightMode.setVisible(true);
             speed.setVisible(true);
-            sprintSpeed.setVisible(true);
+            sprintSpeed.setVisible(!flightMode.is("Constant"));
             doubleTap.setVisible(true);
-            strictMode.setVisible(true);
+            strictMode.setVisible(!flightMode.is("Constant"));
             limitEnabled.setVisible(true);
             limitHeight.setVisible(true);
         }
@@ -230,21 +248,28 @@ public class FlyModule extends Module {
         }
 
         if (isFlying || !doubleTap.isEnabled()) {
-            float flySpeed = (float) (speed.getValue() * 0.05f);
-            if (mc.thePlayer.isSprinting()) {
-                flySpeed = (float) (sprintSpeed.getValue() * 0.05f);
-            }
-            mc.thePlayer.capabilities.setFlySpeed(flySpeed);
-
-            // Strict Mode: Stop motion if no input
-            if (strictMode.isEnabled()) {
-                if (mc.thePlayer.movementInput.moveForward == 0 && mc.thePlayer.movementInput.moveStrafe == 0) {
-                    mc.thePlayer.motionX = 0;
-                    mc.thePlayer.motionZ = 0;
+            if (flightMode.is("Constant")) {
+                // Disable vanilla flight acceleration so the configured motion is the
+                // exact distance applied on the next movement tick.
+                mc.thePlayer.capabilities.setFlySpeed(0.0f);
+                applyConstantVelocity();
+            } else {
+                float flySpeed = (float) (speed.getValue() * 0.05f);
+                if (mc.thePlayer.isSprinting()) {
+                    flySpeed = (float) (sprintSpeed.getValue() * 0.05f);
                 }
+                mc.thePlayer.capabilities.setFlySpeed(flySpeed);
 
-                if (!mc.thePlayer.movementInput.jump && !mc.thePlayer.movementInput.sneak) {
-                    mc.thePlayer.motionY = 0;
+                // Strict Mode: Stop motion if no input
+                if (strictMode.isEnabled()) {
+                    if (mc.thePlayer.movementInput.moveForward == 0 && mc.thePlayer.movementInput.moveStrafe == 0) {
+                        mc.thePlayer.motionX = 0;
+                        mc.thePlayer.motionZ = 0;
+                    }
+
+                    if (!mc.thePlayer.movementInput.jump && !mc.thePlayer.movementInput.sneak) {
+                        mc.thePlayer.motionY = 0;
+                    }
                 }
             }
 
@@ -262,6 +287,39 @@ public class FlyModule extends Module {
                     mc.thePlayer.motionY = 0;
                 }
             }
+        }
+    }
+
+    /**
+     * Applies exact, acceleration-free flight velocity. Horizontal input is
+     * normalized so diagonal movement remains at the configured blocks-per-tick
+     * rate.
+     */
+    private void applyConstantVelocity() {
+        double forward = mc.thePlayer.movementInput.moveForward;
+        double strafe = mc.thePlayer.movementInput.moveStrafe;
+        double inputLength = Math.sqrt(forward * forward + strafe * strafe);
+        double blocksPerTick = speed.getValue();
+
+        if (inputLength > 0.0) {
+            forward /= inputLength;
+            strafe /= inputLength;
+
+            double yaw = Math.toRadians(mc.thePlayer.rotationYaw);
+            double sin = Math.sin(yaw);
+            double cos = Math.cos(yaw);
+
+            mc.thePlayer.motionX = (strafe * cos - forward * sin) * blocksPerTick;
+            mc.thePlayer.motionZ = (forward * cos + strafe * sin) * blocksPerTick;
+        } else {
+            mc.thePlayer.motionX = 0.0;
+            mc.thePlayer.motionZ = 0.0;
+        }
+
+        if (mc.thePlayer.movementInput.jump == mc.thePlayer.movementInput.sneak) {
+            mc.thePlayer.motionY = 0.0;
+        } else {
+            mc.thePlayer.motionY = mc.thePlayer.movementInput.jump ? blocksPerTick : -blocksPerTick;
         }
     }
 

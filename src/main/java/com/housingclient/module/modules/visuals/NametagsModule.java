@@ -9,6 +9,7 @@ import com.housingclient.module.settings.BooleanSetting;
 import com.housingclient.module.settings.ColorSetting;
 import com.housingclient.module.settings.NumberSetting;
 import com.housingclient.utils.HousingClientUserManager;
+import com.housingclient.utils.MinecraftFormatting;
 import com.housingclient.utils.RenderUtils;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -39,6 +40,10 @@ public class NametagsModule extends Module {
     private final BooleanSetting invisibles = new BooleanSetting("Invisibles", "Show invisible player nametags", true);
     private final BooleanSetting dynamicScaling = new BooleanSetting("Dynamic Scaling", "Keep constant size on screen",
             false);
+    private final BooleanSetting self = new BooleanSetting("Self",
+            "Show your custom nametag in second and third person", false);
+    private final BooleanSetting normalizeNames = new BooleanSetting("Normalize Names",
+            "Convert fancy/unicode characters in names to normal letters", false);
 
     // Track which entities we're rendering custom nametags for
     private static Set<Integer> customNametagEntities = new HashSet<>();
@@ -55,6 +60,8 @@ public class NametagsModule extends Module {
         addSetting(armor);
         addSetting(invisibles);
         addSetting(dynamicScaling);
+        addSetting(self);
+        addSetting(normalizeNames);
     }
 
     /**
@@ -68,9 +75,11 @@ public class NametagsModule extends Module {
 
         Entity entity = event.entity;
 
-        // Cancel vanilla nametags ONLY for other players
-        // This allows ArmorStands (holograms) and mobs to show their vanilla nametags
-        if (entity instanceof EntityPlayer && entity != mc.thePlayer) {
+        // Cancel vanilla nametags for other players, plus the local player only when
+        // its custom third-person nametag is actually being rendered. Armor stands
+        // and mob labels remain untouched.
+        if (entity instanceof EntityPlayer
+                && (entity != mc.thePlayer || shouldRenderSelfNametag())) {
             event.setCanceled(true);
         }
     }
@@ -83,8 +92,12 @@ public class NametagsModule extends Module {
         customNametagEntities.clear();
 
         for (EntityPlayer player : mc.theWorld.playerEntities) {
-            if (player == mc.thePlayer)
+            if (player == mc.thePlayer) {
+                if (shouldRenderSelfNametag()) {
+                    customNametagEntities.add(player.getEntityId());
+                }
                 continue;
+            }
             if (player.isInvisible() && !invisibles.isEnabled())
                 continue;
 
@@ -102,27 +115,32 @@ public class NametagsModule extends Module {
             return;
 
         for (EntityPlayer player : mc.theWorld.playerEntities) {
-            if (player == mc.thePlayer)
+            boolean isSelf = player == mc.thePlayer;
+            if (isSelf && !shouldRenderSelfNametag())
                 continue;
 
             // Exclude FreeCam camera entity (has negative entity ID)
-            if (player.getEntityId() < 0)
+            if (!isSelf && player.getEntityId() < 0)
                 continue;
 
             if (player.isInvisible() && !invisibles.isEnabled())
                 continue;
 
             // Check HideHykiaEntities
-            if (com.housingclient.module.modules.render.HideHykiaEntitiesModule.shouldHide(player))
+            if (!isSelf && com.housingclient.module.modules.render.HideHykiaEntitiesModule.shouldHide(player))
                 continue;
 
             // Only skip clearly fake entities (NPC detection)
             // Real players have valid game profiles with UUIDs
-            if (isBot(player))
+            if (!isSelf && isBot(player))
                 continue;
 
             renderNametag(player, partialTicks);
         }
+    }
+
+    private boolean shouldRenderSelfNametag() {
+        return self.isEnabled() && mc.thePlayer != null && mc.gameSettings.thirdPersonView != 0;
     }
 
     /**
@@ -187,12 +205,32 @@ public class NametagsModule extends Module {
 
         if (isFriend && friendHighlight.isEnabled()) {
             text.append("\u00A7a"); // Green for friends
-            text.append(player.getName());
+            String friendName = player.getName();
+            if (normalizeNames.isEnabled()) {
+                friendName = FancyTextModule.revertToNormal(friendName);
+            }
+            text.append(friendName);
         } else {
             // Use tab list name with colors and ranks
             String tabName = getTabDisplayName(player);
+            if (normalizeNames.isEnabled()) {
+                tabName = FancyTextModule.revertToNormal(tabName);
+            }
             text.append(tabName);
         }
+
+        try {
+            if (com.housingclient.HousingClient.instance != null && com.housingclient.HousingClient.instance.getModuleManager() != null) {
+                com.housingclient.module.modules.moderation.NickDetectorModule nickMod = 
+                    (com.housingclient.module.modules.moderation.NickDetectorModule) com.housingclient.HousingClient.instance.getModuleManager().getModule(com.housingclient.module.modules.moderation.NickDetectorModule.class);
+                if (nickMod != null && nickMod.isEnabled() && nickMod.isNicked(player.getName())) {
+                    String markedName = MinecraftFormatting.appendPreservingFormatting(
+                            text.toString(), "\u00A7c~");
+                    text.setLength(0);
+                    text.append(markedName);
+                }
+            }
+        } catch (Exception e) {}
 
         if (showHealth.isEnabled()) {
             float health = player.getHealth();
@@ -219,7 +257,12 @@ public class NametagsModule extends Module {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.translate(x, y + player.height + 0.5, z);
         GlStateManager.rotate(-mc.getRenderManager().playerViewY, 0, 1, 0);
-        GlStateManager.rotate(mc.getRenderManager().playerViewX, 1, 0, 0);
+        // Second person (front view) inverts pitch — match vanilla nametag billboarding
+        float viewX = mc.getRenderManager().playerViewX;
+        if (mc.gameSettings.thirdPersonView == 2) {
+            viewX = -viewX;
+        }
+        GlStateManager.rotate(viewX, 1, 0, 0);
 
         float baseScale = (float) (scale.getValue() * 0.025f);
 

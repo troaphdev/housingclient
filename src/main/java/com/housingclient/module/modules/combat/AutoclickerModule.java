@@ -90,8 +90,6 @@ public class AutoclickerModule extends Module {
     public void onTick() {
         if (mc.thePlayer == null || mc.theWorld == null)
             return;
-        if (mc.currentScreen != null)
-            return;
 
         boolean mouseLeft = Mouse.isButtonDown(0);
         boolean mouseRight = Mouse.isButtonDown(1);

@@ -12,6 +12,7 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.passive.EntityVillager;
@@ -26,6 +27,7 @@ public class ESPModule extends Module {
     private final BooleanSetting npcs = new BooleanSetting("NPCs", "Show NPCs (villagers, armor stands)", false);
     private final BooleanSetting mobs = new BooleanSetting("Mobs", "Show hostile mobs", false);
     private final BooleanSetting animals = new BooleanSetting("Animals", "Show passive animals", false);
+    private final BooleanSetting itemFrames = new BooleanSetting("Item Frames", "Show item frames", false);
     private final BooleanSetting self = new BooleanSetting("Self", "Show yourself", false);
 
     private final BooleanSetting healthBar = new BooleanSetting("Health Bar", "Show health bar", false);
@@ -45,6 +47,7 @@ public class ESPModule extends Module {
         addSetting(npcs);
         addSetting(mobs);
         addSetting(animals);
+        addSetting(itemFrames);
         addSetting(self);
         addSetting(healthBar);
         addSetting(rankColors);
@@ -125,6 +128,8 @@ public class ESPModule extends Module {
             return mobs.isEnabled();
         } else if (entity instanceof EntityAnimal) {
             return animals.isEnabled();
+        } else if (entity instanceof EntityItemFrame) {
+            return itemFrames.isEnabled();
         }
 
         return false;
@@ -166,6 +171,9 @@ public class ESPModule extends Module {
         }
         if (entity instanceof EntityAnimal) {
             return new Color(100, 255, 100); // Light green for animals
+        }
+        if (entity instanceof EntityItemFrame) {
+            return new Color(255, 215, 0); // Gold for item frames
         }
         return new Color(255, 255, 255); // White default
     }

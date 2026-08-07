@@ -15,21 +15,32 @@ import java.util.List;
 
 /**
  * Loaded Players Module
- * Shows players within simulation distance (who have your entity loaded)
+ * Shows players currently rendered in the world
  */
 public class LoadedPlayersModule extends Module {
 
     private final BooleanSetting showCountOnly = new BooleanSetting("Count Only", "Show only the player count", false);
-    private final NumberSetting maxDistance = new NumberSetting("Max Distance", "Simulation distance threshold", 48.0,
-            16.0, 128.0, 8.0);
+    private final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Display distance to each player",
+            false);
+    private final BooleanSetting normalizeNames = new BooleanSetting("Normalize Names",
+            "Convert fancy/unicode characters in names to normal letters", false);
+    private final BooleanSetting customMaxDistance = new BooleanSetting("Custom Max Distance",
+            "Limit listed players by distance", false);
+    private final NumberSetting maxDistance = new NumberSetting("Max Distance", "Maximum distance when custom limit is on",
+            80.0, 16.0, 128.0, 8.0);
 
     private List<EntityPlayer> loadedPlayers = new ArrayList<>();
 
     public LoadedPlayersModule() {
-        super("Loaded Players", "Shows players within simulation distance", Category.VISUALS, ModuleMode.BOTH);
+        super("Loaded Players", "Shows players currently rendered around you", Category.VISUALS, ModuleMode.BOTH);
 
         addSetting(showCountOnly);
+        addSetting(showDistance);
+        addSetting(normalizeNames);
+        addSetting(customMaxDistance);
         addSetting(maxDistance);
+
+        maxDistance.setVisibility(() -> customMaxDistance.isEnabled());
     }
 
     @Override
@@ -38,6 +49,7 @@ public class LoadedPlayersModule extends Module {
             return;
 
         loadedPlayers.clear();
+        boolean limitDistance = customMaxDistance.isEnabled();
         double maxDist = maxDistance.getValue();
 
         for (EntityPlayer player : mc.theWorld.playerEntities) {
@@ -48,10 +60,11 @@ public class LoadedPlayersModule extends Module {
             if (isBot(player))
                 continue;
 
-            double distance = mc.thePlayer.getDistanceToEntity(player);
-            if (distance <= maxDist) {
-                loadedPlayers.add(player);
+            if (limitDistance && mc.thePlayer.getDistanceToEntity(player) > maxDist) {
+                continue;
             }
+
+            loadedPlayers.add(player);
         }
     }
 
@@ -104,6 +117,13 @@ public class LoadedPlayersModule extends Module {
             // Show each player with tab colors
             for (EntityPlayer player : loadedPlayers) {
                 String displayName = getTabDisplayName(player);
+                if (normalizeNames.isEnabled()) {
+                    displayName = FancyTextModule.revertToNormal(displayName);
+                }
+                if (showDistance.isEnabled()) {
+                    double dist = mc.thePlayer.getDistanceToEntity(player);
+                    displayName = displayName + " \u00A77[" + String.format("%.1f", dist) + "m]";
+                }
                 mc.fontRendererObj.drawStringWithShadow(displayName, x + 4, y, 0xFFFFFFFF);
 
                 int nameWidth = mc.fontRendererObj.getStringWidth(displayName) + 4;

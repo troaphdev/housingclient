@@ -27,6 +27,7 @@ public class TracersModule extends Module {
     private final BooleanSetting mobs = new BooleanSetting("Mobs", "Trace to hostile mobs", false);
     private final BooleanSetting animals = new BooleanSetting("Animals", "Trace to passive animals", false);
     private final BooleanSetting npcs = new BooleanSetting("NPCs", "Trace to NPCs", false);
+    private final BooleanSetting friendsOnly = new BooleanSetting("Friends Only", "Only trace to friends", false);
     private final NumberSetting width = new NumberSetting("Width", "Line width", 1.0, 0.5, 5.0, 0.5);
 
     private final BooleanSetting rankColors = new BooleanSetting("Rank Colors", "Color tracers by Hypixel rank", true);
@@ -49,6 +50,7 @@ public class TracersModule extends Module {
         addSetting(mobs);
         addSetting(animals);
         addSetting(npcs);
+        addSetting(friendsOnly);
         addSetting(width);
         addSetting(rankColors);
         addSetting(roleColors);
@@ -127,6 +129,12 @@ public class TracersModule extends Module {
 
             if (isBot)
                 return npcs.isEnabled();
+
+            // Friends Only filter: if enabled, only show tracers for friends
+            if (friendsOnly.isEnabled() && !FriendsModule.isFriend(player.getName())) {
+                return false;
+            }
+
             return players.isEnabled();
         }
         if (entity instanceof EntityMob)

@@ -98,6 +98,11 @@ public class HudEditorGUI extends GuiScreen {
             elements.add(new HudElement("Blink Timer", hudDesigner.getBlinkTimerX(), hudDesigner.getBlinkTimerY(),
                     60, 15, "blinkTimer", blink));
         }
+        // POST-PROCESSING: Clamp all elements to screen bounds so nothing gets stranded off-screen!
+        for (HudElement el : elements) {
+            el.x = Math.max(0, Math.min(screenWidth, el.x));
+            el.y = Math.max(0, Math.min(screenHeight, el.y));
+        }
     }
 
     private void addModuleElementIfEnabled(Class<? extends Module> clazz, String name, int x, int y, int defaultW,

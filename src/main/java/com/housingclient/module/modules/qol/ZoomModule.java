@@ -65,7 +65,8 @@ public class ZoomModule extends Module {
         if (!isEnabled())
             return;
 
-        event.setFOV((float) (event.getFOV() / activeZoom));
+        // Halved zoom: divide activeZoom by 2 so it's less aggressive
+        event.setFOV((float) (event.getFOV() / (activeZoom * 0.5)));
 
         if (smoothCamera.isEnabled()) {
             mc.gameSettings.smoothCamera = true;

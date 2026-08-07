@@ -158,14 +158,7 @@ public class ModuleButton {
         }
 
         // Draw keybind
-        String keybindText;
-        if (bindingKey) {
-            keybindText = "[...]";
-        } else if (module.getKeybind() != 0) {
-            keybindText = "[" + com.housingclient.utils.KeybindManager.getKeyName(module.getKeybind()) + "]";
-        } else {
-            keybindText = "";
-        }
+        String keybindText = bindingKey ? "[...]" : module.getKeybindDisplay();
 
         if (!keybindText.isEmpty()) {
             int keybindWidth = fontRenderer.getStringWidth(keybindText);
@@ -257,7 +250,7 @@ public class ModuleButton {
 
     public void mouseClicked(int mouseX, int mouseY, int button) {
         // Handle mouse binding mode: accept side buttons (>= 3) as keybinds
-        if (bindingKey && button >= 3) {
+        if (bindingKey && button >= 3 && module.allowsModuleKeybind()) {
             module.setKeybind(-(button + 100));
             bindingKey = false;
             return;
@@ -275,13 +268,15 @@ public class ModuleButton {
             }
 
             // Check keybind area (between module name and three dots)
-            String keybindText = module.getKeybind() != 0 ? "[" + com.housingclient.utils.KeybindManager.getKeyName(module.getKeybind()) + "]" : "";
-            if (!keybindText.isEmpty()) {
-                int keybindWidth = fontRenderer.getStringWidth(keybindText);
-                int keybindX = x + width - keybindWidth - 20;
-                if (mouseX >= keybindX && mouseX < x + width - 20) {
-                    bindingKey = !bindingKey;
-                    return;
+            if (module.allowsModuleKeybind()) {
+                String keybindText = module.getKeybindDisplay();
+                if (!keybindText.isEmpty()) {
+                    int keybindWidth = fontRenderer.getStringWidth(keybindText);
+                    int keybindX = x + width - keybindWidth - 20;
+                    if (mouseX >= keybindX && mouseX < x + width - 20) {
+                        bindingKey = !bindingKey;
+                        return;
+                    }
                 }
             }
 
@@ -315,6 +310,10 @@ public class ModuleButton {
 
     public boolean keyTyped(int keyCode) {
         if (bindingKey) {
+            if (!module.allowsModuleKeybind()) {
+                bindingKey = false;
+                return true;
+            }
             if (keyCode == Keyboard.KEY_ESCAPE) {
                 module.setKeybind(0);
             } else if (keyCode != Keyboard.KEY_RETURN) {

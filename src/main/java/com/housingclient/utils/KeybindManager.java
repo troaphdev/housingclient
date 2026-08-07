@@ -78,12 +78,10 @@ public class KeybindManager {
     }
 
     private void handleKeyPress(int key) {
-        // Check module keybinds
+        // Check module keybinds (supports per-action binds via Module.handleKeybindPress)
         for (Module module : HousingClient.getInstance().getModuleManager().getModules()) {
-            if (module.getKeybind() == key) {
-                module.toggle();
-                // Don't return - allow multiple modules with same keybind
-            }
+            module.handleKeybindPress(key);
+            // Don't return - allow multiple modules with same keybind
         }
 
         // Check custom keybinds

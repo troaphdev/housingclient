@@ -1,5 +1,6 @@
 package com.housingclient.gui;
 
+import com.housingclient.HousingClient;
 import com.housingclient.module.settings.ItemSetting;
 import com.housingclient.utils.RenderUtils;
 import com.housingclient.utils.ChatUtils;
@@ -322,6 +323,7 @@ public class ItemSelectorGUI extends GuiScreen {
                         callback.onSelect(filteredItems.get(i));
                     } else if (setting != null) {
                         setting.setValue(filteredItems.get(i));
+                        saveItemSetting();
                     }
                     mc.displayGuiScreen(parent);
                     return;
@@ -423,6 +425,7 @@ public class ItemSelectorGUI extends GuiScreen {
                 callback.onSelect(stack);
             } else if (setting != null) {
                 setting.setValue(stack);
+                saveItemSetting();
             }
 
             mc.displayGuiScreen(parent);
@@ -430,6 +433,13 @@ public class ItemSelectorGUI extends GuiScreen {
         } catch (Exception e) {
             ChatUtils.sendClientMessage("\u00A7cError parsing item.");
             e.printStackTrace();
+        }
+    }
+
+    private void saveItemSetting() {
+        HousingClient client = HousingClient.getInstance();
+        if (client != null && client.getModuleManager() != null) {
+            client.getModuleManager().saveModuleStates();
         }
     }
 }

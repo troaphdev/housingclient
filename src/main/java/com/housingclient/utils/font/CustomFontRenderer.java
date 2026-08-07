@@ -123,6 +123,7 @@ public class CustomFontRenderer extends FontRenderer {
 
     @Override
     public int drawString(String text, float x, float y, int color, boolean dropShadow) {
+        text = com.housingclient.module.modules.visuals.NickHiderModule.replaceOwnName(text);
         if (text == null)
             return 0;
 
@@ -174,6 +175,7 @@ public class CustomFontRenderer extends FontRenderer {
 
     @Override
     public int getStringWidth(String text) {
+        text = com.housingclient.module.modules.visuals.NickHiderModule.replaceOwnName(text);
         if (text == null)
             return 0;
         int width = 0;
@@ -198,6 +200,7 @@ public class CustomFontRenderer extends FontRenderer {
     }
 
     private int drawText(String text, float x, float y, int color, boolean shadow) {
+        text = com.housingclient.module.modules.visuals.NickHiderModule.replaceOwnName(text);
         if (text == null || text.isEmpty())
             return 0;
 
