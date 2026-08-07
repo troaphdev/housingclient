@@ -3,6 +3,7 @@ package com.housingclient.gui;
 import com.housingclient.HousingClient;
 import com.housingclient.gui.theme.Theme;
 import com.housingclient.module.Module;
+import com.housingclient.module.modules.client.HideModulesModule;
 import com.housingclient.module.modules.client.HUDModule;
 import com.housingclient.module.modules.client.HudDesignerModule;
 import com.housingclient.module.settings.ModeSetting;
@@ -135,6 +136,15 @@ public class HUD {
         ToggleNotification.render();
 
         HUDModule hud = getHudModule();
+
+        // Draw watermark independently of Module List — controlled only by Watermark setting in ClickGUIModule
+        com.housingclient.module.modules.client.ClickGUIModule clickGui = com.housingclient.HousingClient
+                .getInstance().getModuleManager()
+                .getModule(com.housingclient.module.modules.client.ClickGUIModule.class);
+        if (clickGui != null && clickGui.showWatermark()) {
+            drawWatermark(5, 5);
+        }
+
         if (hud == null || !hud.isEnabled())
             return;
 
@@ -143,12 +153,14 @@ public class HUD {
         Color primary = hud.getPrimaryColor();
         int mlX = designer != null ? designer.getModuleListX(width) : width - 100;
         int mlY = designer != null ? designer.getModuleListY() : 2;
-        drawModuleList(width, height, mlX, mlY, primary, hud.showModuleListBackground(), hud.getBackgroundPadding());
 
-        // Draw watermark if enabled (top-left corner)
-        if (hud.showWatermark()) {
-            drawWatermark(5, 5);
-        }
+        // Clamp module list position to screen bounds
+        if (mlX < 0) mlX = 0;
+        if (mlX > width) mlX = width;
+        if (mlY < 0) mlY = 0;
+        if (mlY > height) mlY = height;
+
+        drawModuleList(width, height, mlX, mlY, primary, hud.showModuleListBackground(), hud.getBackgroundPadding());
 
         // HUD info elements are now separate modules in Visuals category
         // (CPS, FPS, Ping, Coords, Direction, Biome, Clock)
@@ -177,6 +189,10 @@ public class HUD {
         // Filter out hidden modules (HUD, ClickGUI, HUD Designer)
         List<Module> filtered = new ArrayList<>();
         for (Module m : enabledModules) {
+            if (HideModulesModule.shouldHide(m)) {
+                continue;
+            }
+
             String name = m.getName().toLowerCase();
             if (name.equals("module list") || name.equals("clickgui") || name.equals("hud designer")) {
                 continue;

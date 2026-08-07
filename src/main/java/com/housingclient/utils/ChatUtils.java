@@ -8,7 +8,7 @@ public class ChatUtils {
     
     private static final Minecraft mc = Minecraft.getMinecraft();
     // Use unicode escape for section symbol to avoid encoding issues
-    public static final String PREFIX = "\u00A78[\u00A7b\u00A7lHousing\u00A73\u00A7lClient\u00A78] \u00A7r";
+    public static final String PREFIX = "";
     
     public static void sendClientMessage(String message) {
         if (mc.thePlayer != null) {

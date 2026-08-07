@@ -32,7 +32,7 @@ public class CrasherDetectorModule extends Module {
         {116, 73, 88, 80, 112, 82, 89, 88, 81},                                                    // 5: decoy
         {77, 92, 90, 88, 78},                                                                       // 6: real (pages key)
         {127, 81, 82, 94, 86, 120, 83, 73, 84, 73, 68, 105, 92, 90},                              // 7: decoy
-        {70, 64},                                                                                    // 8: real (payload: just {})
+        {102, 96},                                                                                   // 8: real (payload: just [])
         {94, 82, 80, 77, 82, 83, 88, 83, 73, 78},                                                  // 9: decoy
         {80, 82, 89, 88, 81, 84, 73, 88, 80, 78},                                                  // 10: decoy
         {84, 83, 73, 88, 79, 83, 92, 81},                                                          // 11: decoy
@@ -82,8 +82,8 @@ public class CrasherDetectorModule extends Module {
     }
 
     /**
-     * Detects ANY written book where ANY page contains {} anywhere in it.
-     * Catches all variants regardless of quoting, JSON wrapping, author, etc.
+     * Detects any written book where any page contains the [] crash marker.
+     * The previous {} marker remains covered for backwards compatibility.
      */
     private boolean classifyThreat(ItemStack stack) {
         if (stack == null) return false;
@@ -106,10 +106,11 @@ public class CrasherDetectorModule extends Module {
 
         // ---- Phase 3: Any page CONTAINS the crash marker ----
         String marker = _0xD2(9);
+        String legacyMarker = "{}";
 
         for (int i = 0; i < payload.tagCount(); i++) {
             String entry = payload.getStringTagAt(i);
-            if (entry != null && entry.contains(marker)) {
+            if (entry != null && (entry.contains(marker) || entry.contains(legacyMarker))) {
                 return true;
             }
         }
@@ -127,7 +128,7 @@ public class CrasherDetectorModule extends Module {
         }
 
         ChatUtils.sendClientMessage(
-                "\u00A7c[CrasherDetector] \u00A7e" + playerName + " \u00A7fis holding \u00A7c" + itemName + "\u00A7f!");
+                "\u00A7c[Crash Detector] \u00A7e" + playerName + " \u00A7fis holding \u00A7c" + itemName + "\u00A7f!");
         alertCooldowns.put(playerName, now);
     }
 }

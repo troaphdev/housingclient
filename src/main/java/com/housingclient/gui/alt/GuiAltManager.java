@@ -437,6 +437,49 @@ public class GuiAltManager extends GuiScreen {
             int nameColor = isActive ? ACCENT_BLUE : (account.valid ? TEXT_WHITE : INVALID_DOT);
             fontRendererObj.drawStringWithShadow(account.username, textX, textY, nameColor);
 
+            // == Ban Status Badge (Far Right) ==
+            String status = account.getBanStatus(); // 'UNKNOWN', 'UNBANNED', 'BANNED', 'TEMP_BANNED'
+            String banLabel = "UNKNOWN";
+            int banColor = 0xFF555555; // Gray for unknown
+            int textColor = TEXT_WHITE;
+
+            if (!account.valid) {
+                banLabel = "EXPIRED";
+                banColor = 0xFFAA0000; // Dark Red
+            } else if ("UNBANNED".equals(status)) {
+                banLabel = "UNBANNED";
+                banColor = 0xFF2ECC71; // Green
+            } else if ("BANNED".equals(status)) {
+                banLabel = "PERM";
+                banColor = 0xFFFF5555; // Light Red
+            } else if ("TEMP_BANNED".equals(status)) {
+                long remain = (account.getBanExpiry() - System.currentTimeMillis()) / 1000;
+                if (remain <= 0) {
+                    banLabel = "UNBANNED";
+                    banColor = 0xFF2ECC71;
+                } else {
+                    long d = remain / 86400; remain %= 86400;
+                    long h = remain / 3600; remain %= 3600;
+                    long m = remain / 60; remain %= 60;
+                    long s = remain;
+                    StringBuilder sb = new StringBuilder("TEMP ");
+                    if (d > 0) sb.append(d).append("d ");
+                    if (h > 0) sb.append(h).append("h ");
+                    if (m > 0) sb.append(m).append("m ");
+                    sb.append(s).append("s");
+                    banLabel = sb.toString().trim();
+                    banColor = 0xFFFF8C00; // Orange
+                }
+            }
+
+            int banLabelW = fontRendererObj.getStringWidth(banLabel) + 6;
+            int badgeX = listX + listW - banLabelW - 10;
+            int banBadgeH = 10;
+            int banBadgeY = textY - 1;
+            
+            RenderUtils.drawRoundedRect(badgeX, banBadgeY, banLabelW, banBadgeH, 3, banColor);
+            fontRendererObj.drawStringWithShadow(banLabel, badgeX + 3, banBadgeY + 1, textColor);
+
             // == Status Indicators (On Avatar) ==
             if (isActive) {
                 // Green dot on bottom-right of avatar

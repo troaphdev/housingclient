@@ -3,8 +3,11 @@ package com.housingclient.module.modules.building;
 import com.housingclient.module.Category;
 import com.housingclient.module.Module;
 import com.housingclient.module.ModuleMode;
+import com.housingclient.module.settings.BooleanSetting;
 import com.housingclient.module.settings.NumberSetting;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.util.MovingObjectPosition;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -22,6 +25,7 @@ public class FastPlaceModule extends Module {
 
     private final NumberSetting delay = new NumberSetting("Delay", "Ticks between clicks", 0, 0, 4);
     private final NumberSetting cps = new NumberSetting("Clicks/Tick", "Right-clicks per tick (at 0 delay)", 1, 1, 5);
+    private final BooleanSetting blocksOnly = new BooleanSetting("Blocks Only", "Only affect block placement", false);
 
     private Field rightClickDelayField;
     private Method rightClickMethod;
@@ -39,6 +43,7 @@ public class FastPlaceModule extends Module {
 
         addSetting(delay);
         addSetting(cps);
+        addSetting(blocksOnly);
 
         // Get the rightClickDelayTimer field via reflection
         try {
@@ -114,6 +119,7 @@ public class FastPlaceModule extends Module {
     public void onTick() {
         if (mc.thePlayer == null || mc.theWorld == null)
             return;
+        // Skip if in a GUI (unless it's a sign edit with SignFill enabled)
         if (mc.currentScreen != null) {
             boolean allow = false;
             if (mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiEditSign) {
@@ -125,6 +131,17 @@ public class FastPlaceModule extends Module {
             }
             if (!allow)
                 return;
+        }
+
+        // Blocks Only mode: skip if not looking at a block or not holding a block item
+        if (blocksOnly.isEnabled()) {
+            boolean holdingBlock = mc.thePlayer.getHeldItem() != null
+                    && mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock;
+            boolean lookingAtBlock = mc.objectMouseOver != null
+                    && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK;
+            if (!holdingBlock || !lookingAtBlock) {
+                return;
+            }
         }
 
         // Decrement swap cooldown

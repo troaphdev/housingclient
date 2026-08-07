@@ -6,14 +6,17 @@ import com.housingclient.module.Module;
 import com.housingclient.module.ModuleMode;
 import com.housingclient.module.modules.client.HudDesignerModule;
 import com.housingclient.module.settings.BooleanSetting;
+import com.housingclient.utils.ItemFramePacketFilter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.entity.item.EntityFireworkRocket;
+import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.init.Blocks;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +32,8 @@ import java.util.Set;
  */
 public class HideEntitiesModule extends Module {
 
+    private static volatile boolean discardItemFrameContentsAtNetworkBoundary;
+
     private final BooleanSetting hideBoats = new BooleanSetting("Hide Boats", "Hide boats", true);
     private final BooleanSetting hideFallingSand = new BooleanSetting("Hide Falling Sand", "Hide falling sand", true);
     private final BooleanSetting hideFallingGravel = new BooleanSetting("Hide Falling Gravel", "Hide falling gravel",
@@ -38,6 +43,22 @@ public class HideEntitiesModule extends Module {
     private final BooleanSetting hideMinecarts = new BooleanSetting("Hide Minecarts", "Hide minecarts", false);
     private final BooleanSetting hideTNT = new BooleanSetting("Hide TNT", "Hide primed TNT", false);
     private final BooleanSetting hideFireworks = new BooleanSetting("Hide Fireworks", "Hide fireworks", false);
+    private final BooleanSetting hideItemFrameItems = new BooleanSetting("Hide Item Frame Items",
+            "Hide only the items displayed inside item frames", false) {
+        @Override
+        public void setValue(Boolean value) {
+            super.setValue(value);
+            syncNetworkFilterState();
+        }
+    };
+    private final BooleanSetting hideItemFrames = new BooleanSetting("Hide Item Frames",
+            "Hide item frames and the items displayed inside them", false) {
+        @Override
+        public void setValue(Boolean value) {
+            super.setValue(value);
+            syncNetworkFilterState();
+        }
+    };
     private final BooleanSetting hideDragonEggs = new BooleanSetting("Hide Dragon Eggs", "Hide dragon egg entities",
             false);
     private final BooleanSetting hideSigns = new BooleanSetting("Hide Signs",
@@ -59,6 +80,8 @@ public class HideEntitiesModule extends Module {
         addSetting(hideMinecarts);
         addSetting(hideTNT);
         addSetting(hideFireworks);
+        addSetting(hideItemFrameItems);
+        addSetting(hideItemFrames);
         addSetting(hideDragonEggs);
         addSetting(hideSigns);
         addSetting(hideSignText);
@@ -72,20 +95,40 @@ public class HideEntitiesModule extends Module {
         return hideSignText.isEnabled();
     }
 
+    public boolean isHideItemFrameItemsEnabled() {
+        return hideItemFrameItems.isEnabled();
+    }
+
+    public boolean isHideItemFramesEnabled() {
+        return hideItemFrames.isEnabled();
+    }
+
+    /** True when item-frame stacks must never enter any rendering path. */
+    public boolean shouldHideItemFrameContents() {
+        return hideItemFrameItems.isEnabled() || hideItemFrames.isEnabled();
+    }
+
+    public static boolean shouldDiscardItemFrameContentsAtNetworkBoundary() {
+        return discardItemFrameContentsAtNetworkBoundary;
+    }
+
     @Override
     protected void onEnable() {
+        syncNetworkFilterState();
         hiddenCount = 0;
         hiddenEntityIds = Collections.emptySet();
     }
 
     @Override
     protected void onDisable() {
+        discardItemFrameContentsAtNetworkBoundary = false;
         hiddenCount = 0;
         hiddenEntityIds = Collections.emptySet();
     }
 
     @Override
     public void onTick() {
+        syncNetworkFilterState();
         if (mc.theWorld == null) {
             hiddenCount = 0;
             hiddenEntityIds = Collections.emptySet();
@@ -95,11 +138,26 @@ public class HideEntitiesModule extends Module {
         // Build a fresh set of entity IDs to hide.
         // Wrapped in try-catch to guard against any CME from the entity list.
         Set<Integer> newIds = new HashSet<>();
+        List<Integer> itemFrameIdsToRemove = hideItemFrames.isEnabled()
+                ? new ArrayList<Integer>() : Collections.<Integer>emptyList();
         try {
             List<Entity> entities = mc.theWorld.loadedEntityList;
             for (int i = 0, size = entities.size(); i < size; i++) {
                 try {
                     Entity entity = entities.get(i);
+                    if (entity instanceof EntityItemFrame) {
+                        ItemFramePacketFilter.recordItemFrame(entity.getEntityId());
+                        if (hideItemFrames.isEnabled()) {
+                            itemFrameIdsToRemove.add(entity.getEntityId());
+                            newIds.add(entity.getEntityId());
+                            continue;
+                        }
+                        if (hideItemFrameItems.isEnabled()) {
+                            // Purge data received before this option was enabled.
+                            // Slot 8 is replaced without fetching the old stack.
+                            entity.getDataWatcher().updateObject(8, null);
+                        }
+                    }
                     if (entity != null && shouldHideEntity(entity)) {
                         newIds.add(entity.getEntityId());
                     }
@@ -111,9 +169,21 @@ public class HideEntitiesModule extends Module {
             // Fallback: keep whatever we collected so far
         }
 
+        // Remove after iteration so no item-frame entity remains in any client
+        // world collection when full frame hiding is selected.
+        for (Integer entityId : itemFrameIdsToRemove) {
+            mc.theWorld.removeEntityFromWorld(entityId.intValue());
+        }
+
         // Atomic swap — the render thread only ever reads the reference
         hiddenEntityIds = newIds;
         hiddenCount = newIds.size();
+    }
+
+    private void syncNetworkFilterState() {
+        discardItemFrameContentsAtNetworkBoundary = isEnabled()
+                && ((hideItemFrameItems != null && hideItemFrameItems.isEnabled())
+                        || (hideItemFrames != null && hideItemFrames.isEnabled()));
     }
 
     /**
@@ -160,6 +230,10 @@ public class HideEntitiesModule extends Module {
         }
 
         if (hideFireworks.isEnabled() && entity instanceof EntityFireworkRocket) {
+            return true;
+        }
+
+        if (hideItemFrames.isEnabled() && entity instanceof EntityItemFrame) {
             return true;
         }
 

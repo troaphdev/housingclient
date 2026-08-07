@@ -49,12 +49,10 @@ public abstract class MixinGuiScreen {
             if (key <= 0)
                 return;
 
-            // Check all module keybinds
+            // Check all module keybinds (supports per-action binds)
             if (HousingClient.getInstance() != null && HousingClient.getInstance().getModuleManager() != null) {
                 for (Module module : HousingClient.getInstance().getModuleManager().getModules()) {
-                    if (module.getKeybind() == key) {
-                        module.toggle();
-                    }
+                    module.handleKeybindPress(key);
                 }
             }
         } catch (Throwable t) {

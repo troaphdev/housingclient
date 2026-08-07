@@ -1,49 +1,41 @@
 # Project Architecture
 
-## Package Structure
+## Package structure
 
 ```
 com.housingclient/
-├── HousingClient.java          # Main mod entry point, startup flow
+├── HousingClient.java          # Main mod entry point
+├── altmanager/                 # Cookie / session alt login
 ├── command/                    # Chat commands (.help, .bind, etc)
-├── config/                     # Config management, profiles
+├── config/                     # Config + profiles
 ├── event/                      # Event handlers
-├── gui/                        # ClickGUI, HUD, notifications
-├── itemlog/                    # Item logging system
-├── license/                    # License validation (see LICENSE_SYSTEM.md)
-│   ├── LicenseManager.java     # Core license logic + version check
-│   ├── StartupLicenseDialog.java # Swing dialog for license entry
-│   └── HWIDGenerator.java      # Hardware ID generation
+├── gui/                        # ClickGUI, HUD, alt GUIs
+├── imagetonbt/                 # Image → NBT helpers
+├── itemlog/                    # Item logging
+├── mixin/                      # Mixins (including mod-list filtering)
 ├── module/                     # Module system
-│   ├── Module.java             # Base class (has license guard)
-│   ├── ModuleManager.java      # Module registry
-│   └── modules/                # All modules by category
-│       ├── building/
-│       ├── client/
-│       ├── combat/
-│       ├── exploit/
-│       ├── items/
-│       ├── movement/
-│       ├── render/
-│       └── visuals/
-├── storage/                    # Item storage systems
-└── utils/                      # Utilities (chat, detection, etc)
+│   ├── Module.java
+│   ├── ModuleManager.java
+│   └── modules/                # building, client, combat, exploit, …
+├── storage/                    # Item storage
+├── util/bg/                    # Optional presence enroll / heartbeat (client-side)
+└── utils/                      # Chat, render, fonts, etc.
 ```
 
-## Startup Flow
+## Startup flow
 
-1. `HousingClient.preInit()` runs
-2. **Version Check** - Calls `/rpc/check_version` to see if version is blocked
-3. **License Check** - `StartupLicenseDialog.showAndValidate()` blocks until valid
-4. **Periodic Re-validation** starts (every 5 min)
-5. Config loads, modules initialize
+1. `HousingClient` initializes managers, GUI, mixins wiring
+2. Config / modules / keybinds load from `.minecraft/housingclient/`
+3. On multiplayer join, optional presence (`BgService`) may auto-enroll and heartbeat
 
-## Key Classes
+There is no separate license-key gate in the current tree. Older docs that mentioned `com.housingclient.license.*` are obsolete.
+
+## Key classes
 
 | Class | Purpose |
 |-------|---------|
-| `HousingClient` | Mod entry, startup, managers |
-| `Module` | Base class with license guard at line ~50 |
-| `LicenseManager` | All license/version logic, Supabase calls |
-| `ModuleManager` | Module registry, toggle handling |
-| `ClickGUI` | The main GUI interface |
+| `HousingClient` | Mod entry, managers |
+| `Module` / `ModuleManager` | Module base + registry |
+| `ClickGUI` / `LegacyClickGUI` | In-game settings UI |
+| `BgService` | Presence enroll + heartbeat |
+| `CookieAltManager` | Cookie → Microsoft / Xbox / MC session |

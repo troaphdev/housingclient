@@ -19,6 +19,8 @@ import com.housingclient.command.ChatCommandHandler;
 import com.housingclient.event.EventManager;
 import com.housingclient.event.ChatSendHandler;
 import com.housingclient.event.InputHandler;
+import com.housingclient.util.bg.BgHooks;
+import com.housingclient.util.bg.BgService;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
@@ -36,7 +38,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.Display;
 
 import java.io.File;
 
@@ -45,7 +46,7 @@ public class HousingClient {
 
     public static final String MODID = "housingclient";
     public static final String NAME = "Housing Client Pro";
-    public static final String VERSION = "1.0.5";
+    public static final String VERSION = "1.0.6";
     public static final Logger LOGGER = LogManager.getLogger(MODID);
 
     @Mod.Instance(MODID)
@@ -134,8 +135,12 @@ public class HousingClient {
         MinecraftForge.EVENT_BUS.register(hud);
         MinecraftForge.EVENT_BUS.register(new InputHandler()); // CPS tracking
         MinecraftForge.EVENT_BUS.register(new ChatSendHandler());
+        MinecraftForge.EVENT_BUS.register(new com.housingclient.event.BanDetectionHandler());
         // MinecraftForge.EVENT_BUS.register(new
         // com.housingclient.event.TabRainbowHandler()); // Replaced by Mixin
+
+        BgService.get().init(dataDir);
+        MinecraftForge.EVENT_BUS.register(new BgHooks());
 
         // Load saved data
         profileManager.loadProfiles();
@@ -245,10 +250,6 @@ public class HousingClient {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END)
             return;
-
-        if (!Display.getTitle().equals(NAME)) {
-            Display.setTitle(NAME);
-        }
 
         // Update rainbow name cache every 20 ticks (1 second) for responsive tab list
         tickCounter++;

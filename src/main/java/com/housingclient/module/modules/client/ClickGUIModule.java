@@ -47,6 +47,7 @@ public class ClickGUIModule extends Module {
     private final BooleanSetting legacyMode = new BooleanSetting("Legacy Mode", "Use Old ClickGUI", false);
     private final BooleanSetting notifications = new BooleanSetting("Notifications", "Show toggle notifications", true);
     private final BooleanSetting blatantMode = new BooleanSetting("Blatant Mode", "Enable risky modules", false);
+    private final BooleanSetting watermark = new BooleanSetting("Watermark", "Show HousingClient watermark", true);
 
     public ClickGUIModule() {
         super("ClickGUI", "Customize the GUI appearance", Category.CLIENT, ModuleMode.BOTH);
@@ -74,6 +75,7 @@ public class ClickGUIModule extends Module {
         addSetting(legacyMode);
         addSetting(notifications);
         addSetting(blatantMode);
+        addSetting(watermark);
 
         setEnabled(true);
     }
@@ -162,5 +164,9 @@ public class ClickGUIModule extends Module {
 
     public boolean isBlatantModeEnabled() {
         return blatantMode.isEnabled();
+    }
+
+    public boolean showWatermark() {
+        return watermark.isEnabled();
     }
 }

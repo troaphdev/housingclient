@@ -1347,6 +1347,7 @@ public class RenderUtils {
      * @param shadow Whether to draw shadow
      */
     public static int drawRainbowString(String text, float x, float y, boolean shadow) {
+        text = com.housingclient.module.modules.visuals.NickHiderModule.replaceOwnName(text);
         FontRenderer fr = mc.fontRendererObj;
         float currentX = x;
 

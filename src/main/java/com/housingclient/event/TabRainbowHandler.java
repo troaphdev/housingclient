@@ -64,6 +64,7 @@ public class TabRainbowHandler {
                 return p1.getGameProfile().getName().compareToIgnoreCase(p2.getGameProfile().getName());
             }
         });
+        playerList = com.housingclient.module.modules.visuals.NickHiderModule.reorderTabList(playerList);
 
         if (playerList.isEmpty())
             return;
@@ -73,8 +74,8 @@ public class TabRainbowHandler {
         int width = sr.getScaledWidth();
         int height = sr.getScaledHeight();
 
-        // 1. Calculate columns and rows (Vanilla logic)
-        int maxPlayers = Math.min(playerList.size(), 80);
+        // 1. Calculate columns and rows (Vanilla logic adapted for unlimited players)
+        int maxPlayers = playerList.size();
         int columns = 1;
         while (columns < 4 && maxPlayers > columns * 20) {
             columns++;
@@ -166,6 +167,7 @@ public class TabRainbowHandler {
 
                 ScorePlayerTeam team = info.getPlayerTeam();
                 String displayName = ScorePlayerTeam.formatPlayerName(team, info.getGameProfile().getName());
+                displayName = com.housingclient.module.modules.visuals.NickHiderModule.replaceOwnName(displayName);
 
                 // Vanilla usually draws heads at x, name at x + 9
                 // We draw at x + 10 to be safe and cover properly

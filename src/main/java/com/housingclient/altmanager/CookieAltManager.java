@@ -27,6 +27,8 @@ public class CookieAltManager {
         public String uuid;
         public Map<String, String> cookies;
         public boolean valid = true;
+        public String banStatus = "UNKNOWN";   // "UNKNOWN", "UNBANNED", "BANNED", "TEMP_BANNED"
+        public long banExpiry = 0;    // Expiry timestamp in milliseconds (for temp bans)
 
         public AltAccount(String username, String uuid, Map<String, String> cookies) {
             this.username = username;
@@ -44,6 +46,37 @@ public class CookieAltManager {
 
         public Map<String, String> getCookies() {
             return cookies;
+        }
+
+        public boolean isBanned() {
+            if ("TEMP_BANNED".equals(banStatus) && banExpiry > 0 && System.currentTimeMillis() >= banExpiry) {
+                // Timer hit zero, auto unban
+                banStatus = "UNBANNED";
+                banExpiry = 0;
+            }
+            return "BANNED".equals(banStatus) || "TEMP_BANNED".equals(banStatus);
+        }
+
+        public String getBanStatus() {
+            if ("TEMP_BANNED".equals(banStatus) && banExpiry > 0 && System.currentTimeMillis() >= banExpiry) {
+                banStatus = "UNBANNED";
+                banExpiry = 0;
+            }
+            return banStatus;
+        }
+
+        public long getBanExpiry() {
+            return banExpiry;
+        }
+
+        public void setBan(String status, long expiry) {
+            this.banStatus = status;
+            this.banExpiry = expiry;
+        }
+
+        public void autoUnban() {
+            this.banStatus = "UNBANNED";
+            this.banExpiry = 0;
         }
     }
 
@@ -840,6 +873,8 @@ public class CookieAltManager {
                 accJson.addProperty("username", acc.username);
                 accJson.addProperty("uuid", acc.uuid);
                 accJson.addProperty("valid", acc.valid);
+                accJson.addProperty("banStatus", acc.banStatus != null ? acc.banStatus : "UNKNOWN");
+                accJson.addProperty("banExpiry", acc.banExpiry);
 
                 JsonObject cookieJson = new JsonObject();
                 for (Map.Entry<String, String> entry : acc.cookies.entrySet()) {
@@ -872,6 +907,9 @@ public class CookieAltManager {
                     String uuid = accJson.has("uuid") ? accJson.get("uuid").getAsString() : "";
                     boolean valid = accJson.has("valid") ? accJson.get("valid").getAsBoolean() : true;
 
+                    String banStatus = accJson.has("banStatus") ? accJson.get("banStatus").getAsString() : "UNKNOWN";
+                    long banExpiry = accJson.has("banExpiry") ? accJson.get("banExpiry").getAsLong() : 0;
+
                     Map<String, String> cookies = new HashMap<>();
                     JsonObject cookieJson = accJson.getAsJsonObject("cookies");
                     for (Map.Entry<String, com.google.gson.JsonElement> entry : cookieJson.entrySet()) {
@@ -879,6 +917,8 @@ public class CookieAltManager {
                     }
                     AltAccount acc = new AltAccount(username, uuid, cookies);
                     acc.valid = valid;
+                    acc.banStatus = banStatus;
+                    acc.banExpiry = banExpiry;
                     accounts.add(acc);
                 }
             }

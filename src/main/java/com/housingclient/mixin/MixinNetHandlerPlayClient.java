@@ -3,9 +3,18 @@ package com.housingclient.mixin;
 import com.housingclient.HousingClient;
 import com.housingclient.module.modules.movement.FlyModule;
 import com.housingclient.module.modules.combat.NoDebuffModule;
+import com.housingclient.module.modules.visuals.HideEntitiesModule;
+import com.housingclient.utils.ItemFramePacketFilter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.entity.DataWatcher;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItemFrame;
+import net.minecraft.network.play.server.S0EPacketSpawnObject;
+import net.minecraft.network.play.server.S01PacketJoinGame;
 import net.minecraft.network.play.server.S03PacketTimeUpdate;
+import net.minecraft.network.play.server.S07PacketRespawn;
+import net.minecraft.network.play.server.S1CPacketEntityMetadata;
 import net.minecraft.network.play.server.S1DPacketEntityEffect;
 import net.minecraft.network.play.server.S20PacketEntityProperties;
 import net.minecraft.network.play.server.S39PacketPlayerAbilities;
@@ -16,8 +25,77 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Iterator;
+import java.util.List;
+
 @Mixin(NetHandlerPlayClient.class)
 public class MixinNetHandlerPlayClient {
+
+    @Inject(method = "func_147282_a", at = @At("HEAD"))
+    private void housingclient$clearFramePacketFilterOnJoin(S01PacketJoinGame packet, CallbackInfo ci) {
+        if (!Minecraft.getMinecraft().isCallingFromMinecraftThread()) {
+            ItemFramePacketFilter.clear();
+        }
+    }
+
+    @Inject(method = "func_147280_a", at = @At("HEAD"))
+    private void housingclient$clearFramePacketFilterOnRespawn(S07PacketRespawn packet, CallbackInfo ci) {
+        if (!Minecraft.getMinecraft().isCallingFromMinecraftThread()) {
+            ItemFramePacketFilter.clear();
+        }
+    }
+
+    /** Reject hidden item frames before the client constructs their entities. */
+    @Inject(method = "func_147235_a", at = @At("HEAD"), cancellable = true)
+    private void housingclient$discardItemFrameSpawn(S0EPacketSpawnObject packet, CallbackInfo ci) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!mc.isCallingFromMinecraftThread() || packet.getType() != 71) {
+            return;
+        }
+
+        HideEntitiesModule hideEntities = housingclient$getHideEntities();
+        if (hideEntities != null && hideEntities.isEnabled()
+                && hideEntities.isHideItemFramesEnabled()) {
+            ci.cancel();
+        }
+    }
+
+    /** Discard displayed-item metadata before it enters a frame DataWatcher. */
+    @Inject(method = "func_147284_a", at = @At("HEAD"), cancellable = true)
+    private void housingclient$discardItemFrameMetadata(S1CPacketEntityMetadata packet, CallbackInfo ci) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!mc.isCallingFromMinecraftThread() || mc.theWorld == null) {
+            return;
+        }
+
+        HideEntitiesModule hideEntities = housingclient$getHideEntities();
+        if (hideEntities == null || !hideEntities.isEnabled()
+                || !hideEntities.shouldHideItemFrameContents()) {
+            return;
+        }
+
+        Entity entity = mc.theWorld.getEntityByID(packet.getEntityId());
+        if (!(entity instanceof EntityItemFrame)) {
+            return;
+        }
+
+        if (hideEntities.isHideItemFramesEnabled()) {
+            ci.cancel();
+            return;
+        }
+
+        List<DataWatcher.WatchableObject> metadata = packet.func_149376_c();
+        if (metadata == null) {
+            return;
+        }
+
+        Iterator<DataWatcher.WatchableObject> iterator = metadata.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().getDataValueId() == 8) {
+                iterator.remove();
+            }
+        }
+    }
 
     @Inject(method = "func_147270_a", at = @At("HEAD"), cancellable = true)
     public void handlePlayerAbilities(S39PacketPlayerAbilities packet, CallbackInfo ci) {
@@ -159,5 +237,12 @@ public class MixinNetHandlerPlayClient {
             mc.getNetHandler().addToSendQueue(new net.minecraft.network.play.client.C12PacketUpdateSign(pos, lines));
             ci.cancel();
         }
+    }
+
+    private static HideEntitiesModule housingclient$getHideEntities() {
+        if (HousingClient.getInstance() == null || HousingClient.getInstance().getModuleManager() == null) {
+            return null;
+        }
+        return HousingClient.getInstance().getModuleManager().getModule(HideEntitiesModule.class);
     }
 }

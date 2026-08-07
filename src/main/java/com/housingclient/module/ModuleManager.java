@@ -12,6 +12,7 @@ import com.housingclient.module.modules.items.*;
 import com.housingclient.module.modules.exploit.*;
 
 import com.housingclient.module.modules.moderation.*;
+import com.housingclient.module.modules.miscellaneous.*;
 
 import com.housingclient.module.modules.qol.*;
 import com.housingclient.module.settings.Setting;
@@ -68,12 +69,17 @@ public class ModuleManager {
         modules.add(new ClockModule());
         modules.add(new ScoreboardModule());
         modules.add(new ActiveEffectsModule());
+        modules.add(new WeatherModule());
+        modules.add(new NickHiderModule());
+        modules.add(new ItemDisguiserModule());
+        modules.add(new MailboxESPModule());
 
         // Render modules
         modules.add(new HideHykiaEntitiesModule());
 
         // Moderation modules
         modules.add(new GrieferDetectorModule());
+        modules.add(new NickDetectorModule());
 
         // Combat modules
         modules.add(new AutoclickerModule());
@@ -93,6 +99,8 @@ public class ModuleManager {
         // Client modules
         modules.add(new HUDModule());
         modules.add(new ClickGUIModule());
+        HideModulesModule hideModules = new HideModulesModule();
+        modules.add(hideModules);
         modules.add(new FriendsModule());
         modules.add(new HudDesignerModule());
         modules.add(new ChatModule());
@@ -110,16 +118,22 @@ public class ModuleManager {
         modules.add(new ServerMatcherModule());
         modules.add(new BlinkModule());
         modules.add(new BypassBlacklistModule());
+        modules.add(new SilentNukerModule());
+        modules.add(new CustomAuthorModule());
         modules.add(new WearableItemsModule());
 
-        modules.add(new DispenserFillModule());
+        modules.add(new ContainerFillModule());
         modules.add(new SignFillModule());
         modules.add(new ImageToNBTModule());
         modules.add(new GhostDiscModule());
         modules.add(new PacketMultiplierModule());
 
         // Miscellaneous modules
-        modules.add(new com.housingclient.module.modules.miscellaneous.AutoBegModule());
+        modules.add(new AutoBegModule());
+        modules.add(new ChestStealerModule());
+        modules.add(new CommandCheckerModule());
+
+        hideModules.initializeModuleSettings(modules);
 
         HousingClient.LOGGER.info("Registered " + modules.size() + " modules.");
     }
@@ -260,8 +274,25 @@ public class ModuleManager {
             boolean chatFound = false;
 
             for (Module module : modules) {
-                if (json.has(module.getName())) {
-                    JsonObject moduleJson = json.getAsJsonObject(module.getName());
+                String savedModuleName = module.getName();
+                if (module instanceof ItemDisguiserModule
+                        && !json.has(savedModuleName)
+                        && json.has("Item Hider")) {
+                    savedModuleName = "Item Hider";
+                }
+                if (module instanceof MailboxESPModule
+                        && !json.has(savedModuleName)
+                        && json.has("Mailbox Spammer")) {
+                    savedModuleName = "Mailbox Spammer";
+                }
+                if (module instanceof ContainerFillModule
+                        && !json.has(savedModuleName)
+                        && json.has("Dispenser Fill")) {
+                    savedModuleName = "Dispenser Fill";
+                }
+
+                if (json.has(savedModuleName)) {
+                    JsonObject moduleJson = json.getAsJsonObject(savedModuleName);
 
                     if (module instanceof com.housingclient.module.modules.client.ChatModule) {
                         chatFound = true;

@@ -3,8 +3,6 @@ package com.housingclient.module.modules.qol;
 import com.housingclient.module.Category;
 import com.housingclient.module.Module;
 import com.housingclient.module.ModuleMode;
-import com.housingclient.module.settings.BooleanSetting;
-import com.housingclient.module.settings.NumberSetting;
 
 /**
  * Anti Void Lag Module
@@ -21,20 +19,14 @@ import com.housingclient.module.settings.NumberSetting;
  */
 public class AntiVoidLagModule extends Module {
 
-    private final NumberSetting maxUpdatesPerTick = new NumberSetting("Max Updates/Tick",
-            "Maximum skylight updates per tick (lower = less lag)", 100, 10, 500, 10);
-    private final BooleanSetting showStats = new BooleanSetting("Show Stats",
-            "Display blocked updates in module info", true);
+    private static final int MAX_UPDATES_PER_TICK = 100;
 
     // Counter for limiting updates per tick
     private int updatesThisTick = 0;
-    private int blockedThisTick = 0;
     private long lastTickTime = 0;
 
     public AntiVoidLagModule() {
         super("Anti Void Lag", "Prevents lag when void holes are filled/broken", Category.QOL, ModuleMode.BOTH);
-        addSetting(maxUpdatesPerTick);
-        addSetting(showStats);
     }
 
     @Override
@@ -43,7 +35,6 @@ public class AntiVoidLagModule extends Module {
         long now = System.currentTimeMillis();
         if (now - lastTickTime > 50) { // ~20 TPS = 50ms per tick
             updatesThisTick = 0;
-            blockedThisTick = 0;
             lastTickTime = now;
         }
     }
@@ -65,20 +56,10 @@ public class AntiVoidLagModule extends Module {
         updatesThisTick++;
 
         // Skip if we've exceeded the limit this tick
-        int maxUpdates = maxUpdatesPerTick.getIntValue();
-        if (updatesThisTick > maxUpdates) {
-            blockedThisTick++;
+        if (updatesThisTick > MAX_UPDATES_PER_TICK) {
             return true;
         }
 
         return false;
-    }
-
-    @Override
-    public String getDisplayInfo() {
-        if (showStats.isEnabled() && blockedThisTick > 0) {
-            return "Blocked " + blockedThisTick;
-        }
-        return null;
     }
 }

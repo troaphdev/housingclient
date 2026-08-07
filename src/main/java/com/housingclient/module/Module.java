@@ -146,6 +146,36 @@ public abstract class Module {
         }
     }
 
+    /**
+     * Whether the module card's [bind] control can be clicked to set a module-level keybind.
+     */
+    public boolean allowsModuleKeybind() {
+        return true;
+    }
+
+    /**
+     * Text shown in the module card's keybind slot.
+     */
+    public String getKeybindDisplay() {
+        if (getKeybind() == 0) {
+            return "[None]";
+        }
+        return "[" + com.housingclient.utils.KeybindManager.getKeyName(getKeybind()) + "]";
+    }
+
+    /**
+     * Called when a key/mouse bind is pressed. Default toggles the module on its keybind.
+     * 
+     * @return true if the press was handled
+     */
+    public boolean handleKeybindPress(int key) {
+        if (key != 0 && getKeybind() == key) {
+            toggle();
+            return true;
+        }
+        return false;
+    }
+
     public boolean isVisible() {
         return visible;
     }

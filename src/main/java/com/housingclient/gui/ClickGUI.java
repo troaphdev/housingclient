@@ -100,6 +100,7 @@ public class ClickGUI extends GuiScreen {
     private Module settingsModule = null;
     private long lastSettingsOpenTime = 0;
     private Module bindingModule = null;
+    private ItemSetting bindingItemSetting = null;
     private float settingsScroll = 0;
     private float targetSettingsScroll = 0;
     private Module hoveredInfoModule = null; // For tooltip tracking
@@ -535,18 +536,21 @@ public class ClickGUI extends GuiScreen {
             }
         }
 
-        // Keybind Button (Top Right)
-        String bindText = (bindingModule == module) ? "..."
-                : (module.getKeybind() == 0 ? "[None]" : "[" + com.housingclient.utils.KeybindManager.getKeyName(module.getKeybind()) + "]");
+        // Keybind Button (Top Right) — some modules (e.g. Bypass Blacklist) show
+        // multiple binds and are not clickable here
+        String bindText = (bindingModule == module) ? "[...]" : module.getKeybindDisplay();
         int bindW = fontRendererObj.getStringWidth(bindText) + 6;
         int bindX = x + CARD_WIDTH - bindW - 5;
         int bindY = y + 5;
 
-        boolean bindHover = mouseX >= bindX && mouseX < bindX + bindW && mouseY >= bindY && mouseY < bindY + 10;
+        boolean canBind = module.allowsModuleKeybind();
+        boolean bindHover = canBind && mouseX >= bindX && mouseX < bindX + bindW && mouseY >= bindY
+                && mouseY < bindY + 10;
         if (bindHover || bindingModule == module) {
             RenderUtils.drawRoundedRect(bindX, bindY, bindW, 10, 3, 0x40FFFFFF);
         }
-        fontRendererObj.drawString(bindText, bindX + 3, bindY + 1, bindHover ? ACCENT_GREEN : TEXT_GRAY);
+        fontRendererObj.drawString(bindText, bindX + 3, bindY + 1,
+                bindHover ? ACCENT_GREEN : TEXT_GRAY);
 
         // Don't draw outline yet, draw it last so it covers the button edges
 
@@ -583,8 +587,16 @@ public class ClickGUI extends GuiScreen {
                 "esp", "leftautoclicker", "creativeflight", "crashdetector", "zoom",
                 // Updated Icons
                 "antivoidlag", "chams", "fastbreak", "hud", "scoreboard", "huddesigner", "bypassblacklist", "nofall",
-                "activeeffects", "dispenserfill", "imagetonbt", "ghostdisc", "grieferdetector", "fancytext",
-                "packetmultiplier", "signfill", "autobeg", "wearableitems", "rainbowarmor");
+                "activeeffects", "dispenserfill", "containerfill", "imagetonbt", "ghostdisc", "grieferdetector",
+                "fancytext",
+                "packetmultiplier", "signfill", "autobeg", "wearableitems", "rainbowarmor",
+                // v1.0.6 Icons
+                "commandchecker", "cheststealer", "nickdetector", "mailboxesp", "fullbright", "nickhider",
+                "itemdisguiser", "hidemodules", "silentnuker", "customauthor");
+
+        if (iconName.equals("containerfill")) {
+            iconName = "dispenserfill";
+        }
 
         if (iconName.equals("creativeflight")) {
             if (HousingClient.getInstance().isSafeMode()) {
@@ -748,6 +760,24 @@ public class ClickGUI extends GuiScreen {
                     int boxX = itemX + itemWidth - boxW;
                     int boxY = (int) currentY + 2;
 
+                    // Optional per-setting keybind to the left of the item box
+                    if (itemSet.hasKeybind()) {
+                        String itemBindText = (bindingItemSetting == itemSet) ? "[...]"
+                                : "[" + (itemSet.getKeybind() == 0 ? "None"
+                                        : com.housingclient.utils.KeybindManager.getKeyName(itemSet.getKeybind()))
+                                        + "]";
+                        int itemBindW = fontRendererObj.getStringWidth(itemBindText) + 6;
+                        int itemBindX = boxX - itemBindW - 6;
+                        int itemBindY = boxY + 5;
+                        boolean itemBindHover = mouseX >= itemBindX && mouseX < itemBindX + itemBindW
+                                && mouseY >= itemBindY && mouseY < itemBindY + 10;
+                        if (itemBindHover || bindingItemSetting == itemSet) {
+                            RenderUtils.drawRoundedRect(itemBindX, itemBindY, itemBindW, 10, 3, 0x40FFFFFF);
+                        }
+                        fontRendererObj.drawString(itemBindText, itemBindX + 3, itemBindY + 1,
+                                itemBindHover || bindingItemSetting == itemSet ? ACCENT_GREEN : TEXT_GRAY);
+                    }
+
                     // Draw Box
                     RenderUtils.drawRoundedRect(boxX, boxY, boxW, boxH, 4, 0xFF2F2F2F);
 
@@ -766,16 +796,6 @@ public class ClickGUI extends GuiScreen {
                         RenderHelper.enableGUIStandardItemLighting();
                         mc.getRenderItem().renderItemAndEffectIntoGUI(stack, boxX + 2, boxY + 2);
                         RenderHelper.disableStandardItemLighting();
-                    }
-
-                    // Detect Click
-                    boolean hover = mouseX >= boxX && mouseX < boxX + boxW && mouseY >= boxY && mouseY < boxY + boxH;
-                    if (hover && Mouse.isButtonDown(0)) {
-                        // Debounce check? Mouse.isButtonDown fires every frame.
-                        // Better to handle in mouseClicked but we are in drawSettingsPage which is
-                        // called from drawScreen.
-                        // Standard ClickGUI structure usually handles clicks in mouseClicked.
-                        // But for now, let's just assume we check in mouseClicked.
                     }
                 } else if (setting instanceof StringSetting) {
                     StringSetting strSet = (StringSetting) setting;
@@ -839,13 +859,6 @@ public class ClickGUI extends GuiScreen {
                 .getModuleManager()
                 .getModule(com.housingclient.module.modules.client.ClickGUIModule.class);
 
-        com.housingclient.module.modules.client.HUDModule hud = HousingClient.getInstance()
-                .getModuleManager()
-                .getModule(com.housingclient.module.modules.client.HUDModule.class);
-
-        // Title
-        fontRendererObj.drawStringWithShadow("Client Customization", startX, currentY, TEXT_WHITE);
-        currentY += 30;
 
         // 1. Logo Color (changes HOUSING text color in header)
         fontRendererObj.drawString("Logo Color", startX, currentY, TEXT_GRAY);
@@ -920,8 +933,8 @@ public class ClickGUI extends GuiScreen {
 
         // 3. Watermark (Toggle)
         fontRendererObj.drawString("HUD Watermark", startX, currentY + 6, TEXT_WHITE);
-        if (hud != null) {
-            com.housingclient.module.settings.Setting<?> s = hud.getSetting("Watermark");
+        if (clickGui != null) {
+            com.housingclient.module.settings.Setting<?> s = clickGui.getSetting("Watermark");
             if (s instanceof BooleanSetting) {
                 drawAnimatedToggle(toggleX, currentY, toggleW, toggleH, (BooleanSetting) s);
             }
@@ -1150,8 +1163,10 @@ public class ClickGUI extends GuiScreen {
                     if (!n.equals("playercrasher") && !n.equals("servermatcher") && !n.equals("nbtlogger")
                             && !n.equals("nbteditor") && !n.equals("nbtgiver") && !n.equals("itemstealer")
                             && !n.equals("bypassblacklist") && !n.equals("boatfill")
-                            && !n.equals("dispenserfill") && !n.equals("imagetonbt") && !n.equals("ghostdisc")
-                            && !n.equals("packetmultiplier") && !n.equals("signfill") && !n.equals("wearableitems")) {
+                            && !n.equals("dispenserfill") && !n.equals("containerfill") && !n.equals("imagetonbt")
+                            && !n.equals("ghostdisc")
+                            && !n.equals("packetmultiplier") && !n.equals("signfill") && !n.equals("wearableitems")
+                            && !n.equals("silentnuker") && !n.equals("customauthor")) {
                         result.add(m);
                     }
                 } else if (m.getCategory() == Category.VISUALS || m.getCategory() == Category.RENDER) {
@@ -1210,7 +1225,16 @@ public class ClickGUI extends GuiScreen {
         mouseX = (int) (mouseX * mouseScale);
         mouseY = (int) (mouseY * mouseScale);
 
-        // Handle mouse binding mode: side buttons (>= 3) bind to the module
+        // Handle mouse binding mode: side buttons (>= 3) bind to the module / item setting
+        if (bindingItemSetting != null && mouseButton >= 3) {
+            bindingItemSetting.setKeybind(-(mouseButton + 100));
+            bindingItemSetting = null;
+            HousingClient.getInstance().saveAll();
+            if (searchField != null) {
+                searchField.setFocused(true);
+            }
+            return;
+        }
         if (bindingModule != null && mouseButton >= 3) {
             bindingModule.setKeybind(-(mouseButton + 100));
             bindingModule = null;
@@ -1296,14 +1320,34 @@ public class ClickGUI extends GuiScreen {
                             return;
                         }
                     } else if (setting instanceof ItemSetting) {
+                        ItemSetting itemSet = (ItemSetting) setting;
                         int boxW = 100;
                         int boxH = 20;
                         int boxX = itemX + itemWidth - boxW;
                         int boxY = (int) currentY + 2;
 
+                        if (itemSet.hasKeybind()) {
+                            String itemBindText = (bindingItemSetting == itemSet) ? "[...]"
+                                    : "[" + (itemSet.getKeybind() == 0 ? "None"
+                                            : com.housingclient.utils.KeybindManager.getKeyName(itemSet.getKeybind()))
+                                            + "]";
+                            int itemBindW = fontRendererObj.getStringWidth(itemBindText) + 6;
+                            int itemBindX = boxX - itemBindW - 6;
+                            int itemBindY = boxY + 5;
+                            if (mouseX >= itemBindX && mouseX < itemBindX + itemBindW && mouseY >= itemBindY
+                                    && mouseY < itemBindY + 10) {
+                                bindingItemSetting = itemSet;
+                                bindingModule = null;
+                                if (searchField != null) {
+                                    searchField.setFocused(false);
+                                }
+                                return;
+                            }
+                        }
+
                         if (mouseButton == 0 && mouseX >= boxX && mouseX < boxX + boxW && mouseY >= boxY
                                 && mouseY < boxY + boxH) {
-                            mc.displayGuiScreen(new ItemSelectorGUI(this, (ItemSetting) setting));
+                            mc.displayGuiScreen(new ItemSelectorGUI(this, itemSet));
                             return;
                         }
                     } else if (setting instanceof StringSetting) {
@@ -1427,20 +1471,21 @@ public class ClickGUI extends GuiScreen {
                         return;
                     }
 
-                    // Keybind Click
-                    String bindText = (bindingModule == module) ? "..."
-                            : (module.getKeybind() == 0 ? "[None]"
-                                    : "[" + com.housingclient.utils.KeybindManager.getKeyName(module.getKeybind()) + "]");
-                    int bindW = fontRendererObj.getStringWidth(bindText) + 6;
-                    int bindX = cardX + CARD_WIDTH - bindW - 5;
-                    int bindY = cardY + 5;
-                    if (mouseX >= bindX && mouseX < bindX + bindW && mouseY >= bindY && mouseY < bindY + 10) {
-                        bindingModule = module;
-                        // Defocus search while binding to prevent key conflicts
-                        if (searchField != null) {
-                            searchField.setFocused(false);
+                    // Keybind Click (disabled for modules with per-action binds)
+                    if (module.allowsModuleKeybind()) {
+                        String bindText = (bindingModule == module) ? "[...]" : module.getKeybindDisplay();
+                        int bindW = fontRendererObj.getStringWidth(bindText) + 6;
+                        int bindX = cardX + CARD_WIDTH - bindW - 5;
+                        int bindY = cardY + 5;
+                        if (mouseX >= bindX && mouseX < bindX + bindW && mouseY >= bindY && mouseY < bindY + 10) {
+                            bindingModule = module;
+                            bindingItemSetting = null;
+                            // Defocus search while binding to prevent key conflicts
+                            if (searchField != null) {
+                                searchField.setFocused(false);
+                            }
+                            return;
                         }
-                        return;
                     }
 
                     // Enabled Toggle
@@ -1472,9 +1517,6 @@ public class ClickGUI extends GuiScreen {
             if (clickGui != null && hud != null) {
                 int startX = guiX + SIDEBAR_WIDTH + 20;
                 int currentY = guiY + HEADER_HEIGHT + 20;
-
-                // Title skip
-                currentY += 30;
 
                 // 1. Accent Color
                 // Text skip
@@ -1541,9 +1583,8 @@ public class ClickGUI extends GuiScreen {
                 currentY += 30;
 
                 // 3. Watermark
-                // Note: Watermark is in HUD module, so check hud settings
                 if (mouseX >= startX && mouseX < startX + rowWidth && mouseY >= currentY && mouseY < currentY + 30) {
-                    com.housingclient.module.settings.Setting<?> s = hud.getSettings().stream()
+                    com.housingclient.module.settings.Setting<?> s = clickGui.getSettings().stream()
                             .filter(set -> set.getName().equals("Watermark")).findFirst().orElse(null);
                     if (s instanceof com.housingclient.module.settings.BooleanSetting)
                         ((com.housingclient.module.settings.BooleanSetting) s).toggle();
@@ -1671,6 +1712,19 @@ public class ClickGUI extends GuiScreen {
         }
 
         // IMPORTANT: Check binding mode FIRST before search field
+        if (bindingItemSetting != null) {
+            if (keyCode == Keyboard.KEY_ESCAPE || keyCode == Keyboard.KEY_DELETE) {
+                bindingItemSetting.setKeybind(0);
+            } else {
+                bindingItemSetting.setKeybind(keyCode);
+            }
+            bindingItemSetting = null;
+            HousingClient.getInstance().saveAll();
+            if (searchField != null) {
+                searchField.setFocused(true);
+            }
+            return;
+        }
         if (bindingModule != null) {
             if (keyCode == Keyboard.KEY_ESCAPE || keyCode == Keyboard.KEY_DELETE) {
                 bindingModule.setKeybind(0);

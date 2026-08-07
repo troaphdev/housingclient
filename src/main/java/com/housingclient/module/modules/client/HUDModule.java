@@ -12,8 +12,6 @@ import java.awt.Color;
 
 public class HUDModule extends Module {
 
-    // Watermark Setting
-    private final BooleanSetting showWatermark = new BooleanSetting("Watermark", "Show client watermark on HUD", true);
 
     // Module List Settings
     private final ModeSetting moduleListPos = new ModeSetting("Position", "Module list position", "Top Right",
@@ -32,7 +30,8 @@ public class HUDModule extends Module {
     public HUDModule() {
         super("Module List", "Display enabled modules on screen", Category.CLIENT, ModuleMode.BOTH);
 
-        addSetting(showWatermark);
+
+
         addSetting(moduleListPos);
         addSetting(moduleListSort);
         addSetting(moduleListBackground);
@@ -46,9 +45,6 @@ public class HUDModule extends Module {
         setEnabled(true); // Enabled by default
     }
 
-    public boolean showWatermark() {
-        return showWatermark.isEnabled();
-    }
 
     public String getModuleListPos() {
         return moduleListPos.getValue();

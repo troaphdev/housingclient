@@ -31,7 +31,7 @@ public class NBTLoggerModule extends Module {
     private final BooleanSetting logToChat = new BooleanSetting("Log to Chat", "Show logged items in chat", true);
     private final BooleanSetting saveToLog = new BooleanSetting("Save to Item Log", "Save items to Item Log tab", true);
     private final BooleanSetting logAllNBT = new BooleanSetting("Log All NBT",
-            "Log any item with NBT, not just ItemModel", false);
+            "Log any item with custom NBT data", true);
     private final BooleanSetting logArmor = new BooleanSetting("Log Armor", "Also log armor with custom tags", true);
 
     // Track logged items to avoid spam (player entity ID + slot + item hash)

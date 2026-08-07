@@ -1,18 +1,17 @@
 # HousingClient Documentation
 
-This folder contains documentation for AI assistants and developers working on HousingClient.
+Developer notes for people working on the source tree.
 
-## Key Files
+## Key files
 
 | File | Description |
 |------|-------------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Project structure and component overview |
-| [LICENSE_SYSTEM.md](LICENSE_SYSTEM.md) | How the license/auth system works |
-| [SUPABASE.md](SUPABASE.md) | Database schema and RPC functions |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Package layout and startup overview |
+| [BUGFIX_ItemLogTab_Obfuscation.md](BUGFIX_ItemLogTab_Obfuscation.md) | Historical ItemLog / obfuscation fix notes |
 
-## Quick Reference
+## Quick reference
 
-- **Main Entry:** `com.housingclient.HousingClient`
+- **Main entry:** `com.housingclient.HousingClient`
 - **Modules:** `com.housingclient.module.modules.*`
-- **License:** `com.housingclient.license.*`
-- **Version:** Currently `1.0.0` (defined in `HousingClient.java`)
+- **Presence (optional):** `com.housingclient.util.bg.*`
+- **Version:** see `HousingClient.VERSION` / `build.gradle`

@@ -252,7 +252,7 @@ public class GrieferDetectorModule extends Module {
     private void alert(String name, String type, boolean severe) {
         String color = severe ? "\u00A7c" : "\u00A7f"; // Light red if severe, white otherwise for the item type
         ChatUtils.sendClientMessage(
-                "\u00A7c[GrieferDetector] \u00A7f" + name + " is flagging [" + color + type + "\u00A7f]");
+                "\u00A7c[Griefer Detector] \u00A7f" + name + " is flagging [" + color + type + "\u00A7f]");
     }
 
     public void onPacketReceive(net.minecraft.network.Packet<?> packet) {

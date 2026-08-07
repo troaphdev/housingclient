@@ -32,6 +32,31 @@ desktop.ini
 *.txt
 logs/
 
-# Libraries
+# Libraries / Forge extract
 libs/
 forgeSrcExtract/
+
+# Local scratch / test junk
+TestGson.java
+test_unicode.json
+
+# Runtime credentials (never commit)
+**/alts.json
+**/*.cookie
+**/cookies.txt
+**/ns.dat
+**/session.json
+**/credentials/
+**/*.pem
+**/*.pkcs8
+
+# Backend / Supabase (never publish with client source)
+cloud/
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+presence/.env
+presence/local/
+supabase/.temp/

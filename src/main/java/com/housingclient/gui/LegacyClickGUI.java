@@ -350,8 +350,7 @@ public class LegacyClickGUI extends GuiScreen {
         }
 
         // Keybind
-        String keybindText = isBinding ? "[...]"
-                : (module.getKeybind() != 0 ? "[" + getKeyName(module.getKeybind()) + "]" : "[None]");
+        String keybindText = isBinding ? "[...]" : module.getKeybindDisplay();
         if (!keybindText.isEmpty()) {
             int kw = fontRendererObj.getStringWidth(keybindText);
             fontRendererObj.drawString(keybindText, x + width - kw - 8, y + 8,
@@ -583,8 +582,8 @@ public class LegacyClickGUI extends GuiScreen {
             if (mouseX >= moduleContentX && mouseX < moduleContentX + moduleContentWidth &&
                     mouseY >= moduleY && mouseY < moduleY + MODULE_HEIGHT) {
 
-                // Keybind area
-                if (mouseX > moduleContentX + moduleContentWidth - 60) {
+                // Keybind area (disabled for modules with per-action binds)
+                if (module.allowsModuleKeybind() && mouseX > moduleContentX + moduleContentWidth - 60) {
                     bindingModule = module;
                     return;
                 }
